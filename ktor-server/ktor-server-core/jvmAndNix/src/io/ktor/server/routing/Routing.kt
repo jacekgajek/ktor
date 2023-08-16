@@ -158,8 +158,46 @@ public val Route.application: Application
     }
 
 /**
- * Installs a [Routing] plugin for the this [Application] and runs a [configuration] script on it.
- * You can learn more about routing in Ktor from [Routing](https://ktor.io/docs/routing-in-ktor.html).
+ * Configure the [Routing] plugin for the this [Application] using the [configuration] block.
+ *
+ * With routing, you can handle different methods:
+ * ```kotlin
+ * routing {
+ *     get("docs") {
+ *        // ...
+ *     }
+ *     post("signUp") {
+ *        // ...
+ *     }
+ * }
+ * ```
+ *
+ * Handle request parameters:
+ * ```kotlin
+ * routing {
+ *     get("/{name}") {
+ *         val name = call.parameters["name"]
+ *         call.respondText("Hello, $name!")
+ *     }
+ * }
+ * ```
+ *
+ * Or even build a complex routing tables:
+ * ```kotlin
+ * routing {
+ *     route("users") {
+ *         get("{id}") {
+ *             // ...
+ *         }
+ *         post("create") {
+ *             // ...
+ *         }
+ *     }
+ * }
+ * ```
+ *
+ *
+ * You can learn more about routing in the Ktor documentation: https://ktor.io/docs/routing-in-ktor.html
  */
 @KtorDsl
 public fun Application.routing(configuration: RootRoute.() -> Unit): Routing =
