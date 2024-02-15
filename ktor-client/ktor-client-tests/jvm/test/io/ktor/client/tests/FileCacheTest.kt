@@ -18,7 +18,6 @@ class FileCacheTest : ClientLoader() {
     private val privateStorage = FileStorage(Files.createTempDirectory("cache-test-private").toFile())
 
     @Test
-    @Ignore("Doesn't work in Train due to Coroutines update. The problem was resolved in version 1.8.0-RC2")
     fun testVaryHeader() = clientTests(listOf("Js")) {
         config {
             install(HttpCache) {
@@ -77,7 +76,6 @@ class FileCacheTest : ClientLoader() {
     }
 
     @Test
-    @Ignore("Doesn't work in Train due to Coroutines update. The problem was resolved in version 1.8.0-RC2")
     fun testReuseCacheStorage() = clientTests(listOf("Js")) {
         config {
             install(HttpCache) {
@@ -101,7 +99,6 @@ class FileCacheTest : ClientLoader() {
     }
 
     @Test
-    @Ignore("Doesn't work in Train due to Coroutines update. The problem was resolved in version 1.8.0-RC2")
     fun testLongPath() = clientTests {
         config {
             install(HttpCache) {
@@ -116,7 +113,6 @@ class FileCacheTest : ClientLoader() {
     }
 
     @Test
-    @Ignore("Doesn't work in Train due to Coroutines update. The problem was resolved in version 1.8.0-RC2")
     fun testSkipCacheIfException() = clientTests {
         val file = Files.createTempDirectory("cache-test-public-deleted").toFile()
         val publicStorage = FileStorage(file)
