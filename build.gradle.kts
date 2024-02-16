@@ -34,10 +34,7 @@ buildscript {
 
         configurations.classpath {
             resolutionStrategy.eachDependency {
-                if (requested.group == "org.jetbrains.kotlin"
-                    // on dev environmet k/n has not the same version as KGP. Could be removed after KT-62826 is done.
-                    && requested.name != "kotlin-native"
-                    && requested.name != "kotlin-native-prebuilt") {
+                if (requested.group == "org.jetbrains.kotlin") {
                     useVersion(kotlin_version!!)
                 }
             }
@@ -158,10 +155,7 @@ allprojects {
     configurations.configureEach {
         if (isCanBeResolved) {
             resolutionStrategy.eachDependency {
-                if (requested.group == "org.jetbrains.kotlin"
-                    // on dev environmet k/n has not the same version as KGP. Could be removed after KT-62826 is done.
-                    && requested.name != "kotlin-native"
-                    && requested.name != "kotlin-native-prebuilt") {
+                if (requested.group == "org.jetbrains.kotlin") {
                     useVersion(kotlinVersion)
                 }
             }
