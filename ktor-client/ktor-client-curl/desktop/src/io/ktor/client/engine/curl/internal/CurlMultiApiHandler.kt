@@ -25,7 +25,7 @@ private class RequestHolder @OptIn(ExperimentalForeignApi::class) constructor(
     }
 }
 
-@OptIn(InternalAPI::class)
+@OptIn(InternalAPI::class, ExperimentalStdlibApi::class)
 internal class CurlMultiApiHandler : Closeable {
     @OptIn(ExperimentalForeignApi::class)
     private val activeHandles = mutableMapOf<EasyHandle, RequestHolder>()
@@ -257,7 +257,7 @@ internal class CurlMultiApiHandler : Closeable {
                 return CurlFail(cause)
             } finally {
                 responseBuilder.bodyChannel.close(cause)
-                responseBuilder.headersBytes.release()
+                responseBuilder.headersBytes.close()
             }
         } finally {
             curl_multi_remove_handle(multiHandle, easyHandle).verify()
@@ -286,7 +286,7 @@ internal class CurlMultiApiHandler : Closeable {
                     ?: collectSuccessResponse(easyHandle)!!
             } finally {
                 responseBuilder.bodyChannel.close(null)
-                responseBuilder.headersBytes.release()
+                responseBuilder.headersBytes.close()
             }
         } finally {
             curl_multi_remove_handle(multiHandle, easyHandle).verify()

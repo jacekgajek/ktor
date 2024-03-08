@@ -60,7 +60,7 @@ public class WebSocketWriter(
             queue.close(t)
         } finally {
             queue.close(CancellationException("WebSocket closed.", null))
-            writeChannel.close()
+            writeChannel.flushAndClose()
         }
 
         drainQueueAndDiscard()

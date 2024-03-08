@@ -13,7 +13,7 @@ import kotlinx.cinterop.*
 import platform.Foundation.*
 import kotlin.coroutines.*
 
-@OptIn(UnsafeNumber::class)
+@OptIn(UnsafeNumber::class, ExperimentalStdlibApi::class)
 internal class DarwinLegacySession(
     private val config: DarwinLegacyClientEngineConfig,
     private val requestQueue: NSOperationQueue?

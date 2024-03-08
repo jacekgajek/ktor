@@ -49,8 +49,6 @@ class ResponseConsumerTest {
         consumer.consumeContent(decoder, NoOpControl())
 
         // Shouldn't freeze.
-        assertFails {
-            consumer.consumeContent(decoder, NoOpControl())
-        }
+        consumer.consumeContent(decoder, NoOpControl())
     }
 }

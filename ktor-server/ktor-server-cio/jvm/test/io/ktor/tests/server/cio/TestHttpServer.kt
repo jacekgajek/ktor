@@ -111,8 +111,8 @@ private suspend fun client(
         } catch (t: Throwable) {
             incoming.close(t)
         } finally {
-            incoming.close()
-            outgoing.close()
+            incoming.flushAndClose()
+            outgoing.flushAndClose()
             DefaultByteBufferPool.recycle(buffer)
         }
     }
@@ -132,7 +132,7 @@ private suspend fun client(
             handler(requestScope.withContext(callDispatcher), request)
         }
     }.invokeOnCompletion {
-        incoming.close()
-        outgoing.close()
+        incoming.cancel()
+        outgoing.cancel()
     }
 }

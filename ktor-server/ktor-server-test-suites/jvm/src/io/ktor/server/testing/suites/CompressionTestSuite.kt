@@ -35,7 +35,10 @@ abstract class CompressionTestSuite<TEngine : ApplicationEngine, TConfiguration 
         createAndStartServer {
             install(Compression)
             handle {
-                call.respond(LocalFileContent(file))
+                val message = LocalFileContent(file)
+                println("File content")
+                call.respond(message)
+                println("Responded")
             }
         }
 

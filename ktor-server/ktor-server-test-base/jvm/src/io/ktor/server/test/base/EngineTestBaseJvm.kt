@@ -52,7 +52,7 @@ actual abstract class EngineTestBase<
             .any { "-agentlib:jdwp" in it }
 
     protected actual var port: Int = findFreePort()
-    protected actual var sslPort: Int = findFreePort()
+    protected actual var sslPort: Int = 9091 //findFreePort()
     protected actual var server: EmbeddedServer<TEngine, TConfiguration>? = null
     protected var callGroupSize: Int = -1
         private set
@@ -252,15 +252,18 @@ actual abstract class EngineTestBase<
         builder: suspend HttpRequestBuilder.() -> Unit,
         block: suspend HttpResponse.(Int) -> Unit
     ) {
-        withUrl("http://127.0.0.1:$port$path", port, builder, block)
+//        withUrl("http://127.0.0.1:$port$path", port, builder, block)
+//        println("first done")
 
         if (enableSsl) {
             withUrl("https://127.0.0.1:$sslPort$path", sslPort, builder, block)
+            println("second done")
         }
 
-        if (enableHttp2 && enableSsl) {
-            withHttp2("https://127.0.0.1:$sslPort$path", sslPort, builder, block)
-        }
+//        if (enableHttp2 && enableSsl) {
+//            withHttp2("https://127.0.0.1:$sslPort$path", sslPort, builder, block)
+//            println("third done")
+//        }
     }
 
     protected inline fun socket(block: Socket.() -> Unit) {

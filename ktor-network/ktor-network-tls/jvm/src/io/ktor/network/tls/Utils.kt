@@ -10,6 +10,7 @@ import java.security.*
 
 internal fun Digest(): Digest = Digest(BytePacketBuilder())
 
+@OptIn(ExperimentalStdlibApi::class)
 @JvmInline
 internal value class Digest(val state: BytePacketBuilder) : Closeable {
 
@@ -40,7 +41,7 @@ internal value class Digest(val state: BytePacketBuilder) : Closeable {
     }
 
     override fun close() {
-        state.release()
+        state.close()
     }
 }
 

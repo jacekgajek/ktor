@@ -4,7 +4,6 @@
 
 package io.ktor.util.cio
 
-import io.ktor.util.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.jvm.nio.*
@@ -36,6 +35,7 @@ public fun File.readChannel(
         RandomAccessFile(this@readChannel, "r").use { file ->
             val fileChannel: FileChannel = file.channel
             fileChannel.writeToScope(this, start, endInclusive)
+            println("Wrote to scope")
         }
     }.channel
 }

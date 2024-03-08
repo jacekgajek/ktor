@@ -23,6 +23,7 @@ import io.ktor.server.test.base.*
 import io.ktor.server.testing.*
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
+import io.ktor.utils.io.core.*
 import io.ktor.utils.io.jvm.javaio.*
 import io.ktor.utils.io.streams.*
 import kotlinx.coroutines.*
@@ -35,7 +36,9 @@ import java.util.*
 import java.util.concurrent.*
 import java.util.concurrent.atomic.*
 import kotlin.concurrent.*
+import kotlin.io.use
 import kotlin.test.*
+import kotlin.text.toByteArray
 
 @ExtendWith(RetrySupport::class)
 abstract class SustainabilityTestSuite<TEngine : ApplicationEngine, TConfiguration : ApplicationEngine.Configuration>(
@@ -190,7 +193,7 @@ abstract class SustainabilityTestSuite<TEngine : ApplicationEngine, TConfigurati
 
                             override suspend fun writeTo(channel: ByteWriteChannel) {
                                 channel.writeFully(data)
-                                channel.close()
+                                channel.flushAndClose()
                             }
                         }
                     )
@@ -207,7 +210,7 @@ abstract class SustainabilityTestSuite<TEngine : ApplicationEngine, TConfigurati
 
                             override suspend fun writeTo(channel: ByteWriteChannel) {
                                 channel.writeFully(data)
-                                channel.close()
+                                channel.flushAndClose()
                             }
                         }
                     )

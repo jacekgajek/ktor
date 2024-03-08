@@ -20,6 +20,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlin.coroutines.*
 
+@OptIn(ExperimentalStdlibApi::class)
 internal class Endpoint(
     private val host: String,
     private val port: Int,
@@ -89,28 +90,25 @@ internal class Endpoint(
         deliveryPoint.send(task)
     }
 
-    @OptIn(InternalAPI::class)
     private suspend fun makeDedicatedRequest(
         request: HttpRequestData,
         callContext: CoroutineContext
     ): HttpResponseData {
         try {
             val connection = connect(request)
-            val input = this@Endpoint.mapEngineExceptions(connection.input, request)
-            val originOutput = this@Endpoint.mapEngineExceptions(connection.output, request)
-
-            val output = originOutput.handleHalfClosed(
-                callContext,
-                config.endpoint.allowHalfClose
-            )
+            val input = connection.input
+            val originOutput = connection.output
 
             callContext[Job]!!.invokeOnCompletion { cause ->
                 val originCause = cause?.unwrapCancellationException()
                 try {
-                    input.cancel(originCause)
-                    originOutput.close(originCause)
-                    connection.socket.close()
-                    releaseConnection()
+                    if (originCause != null) {
+                        originOutput.cancel(originCause)
+                    }
+                    GlobalScope.launch {
+                        originOutput.flushAndClose()
+                        releaseConnection()
+                    }
                 } catch (_: Throwable) {
                 }
             }
@@ -122,9 +120,9 @@ internal class Endpoint(
             val overProxy = proxy != null
 
             return if (expectContinue(request.headers[HttpHeaders.Expect], request.body)) {
-                processExpectContinue(request, input, output, originOutput, callContext, requestTime, overProxy)
+                processExpectContinue(request, input, originOutput, originOutput, callContext, requestTime, overProxy)
             } else {
-                writeRequest(request, output, callContext, overProxy)
+                writeRequest(request, originOutput, callContext, overProxy)
                 readResponse(requestTime, request, input, originOutput, callContext)
             }
         } catch (cause: Throwable) {
@@ -163,7 +161,7 @@ internal class Endpoint(
                 }
 
                 else -> {
-                    output.close()
+                    output.flushAndClose()
                     return@withContext response
                 }
             }

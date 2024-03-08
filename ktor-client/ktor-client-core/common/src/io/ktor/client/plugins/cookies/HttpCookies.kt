@@ -23,6 +23,7 @@ private val LOGGER = KtorSimpleLogger("io.ktor.client.plugins.HttpCookies")
  *
  * You can learn more from [Cookies](https://ktor.io/docs/http-cookies.html).
  */
+@OptIn(ExperimentalStdlibApi::class)
 public class HttpCookies internal constructor(
     private val storage: CookiesStorage,
     private val defaults: List<suspend CookiesStorage.() -> Unit>

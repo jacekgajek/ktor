@@ -9,7 +9,6 @@ import io.ktor.util.cio.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.CancellationException
 import javax.servlet.http.*
 import kotlin.coroutines.*
 
@@ -110,8 +109,6 @@ public class ServletUpgradeHandler : HttpUpgradeHandler, CoroutineScope {
 
             upgradeJob.complete()
             job.invokeOnCompletion {
-                inputChannel.cancel()
-                outputChannel.close()
                 upgradeJob.cancel()
             }
         }
@@ -119,7 +116,7 @@ public class ServletUpgradeHandler : HttpUpgradeHandler, CoroutineScope {
 
     override fun destroy() {
         try {
-            upgradeJob.completeExceptionally(CancellationException("Upgraded WebConnection destroyed"))
+            upgradeJob.completeExceptionally(java.util.concurrent.CancellationException("Upgraded WebConnection destroyed"))
         } catch (_: Throwable) {
         }
     }

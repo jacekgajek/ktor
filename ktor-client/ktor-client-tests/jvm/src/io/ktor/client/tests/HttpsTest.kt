@@ -11,11 +11,13 @@ import io.ktor.client.tests.utils.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.utils.io.errors.*
+import kotlinx.coroutines.debug.junit5.*
 import java.security.*
 import java.security.cert.*
 import javax.net.ssl.*
 import kotlin.test.*
 
+@CoroutinesTimeout(5000)
 abstract class HttpsTest<T : HttpClientEngineConfig>(
     private val factory: HttpClientEngineFactory<T>
 ) : TestWithKtor() {

@@ -14,7 +14,7 @@ import io.ktor.client.tests.utils.*
 import io.ktor.http.*
 import kotlin.test.*
 
-class CookiesTest : ClientLoader() {
+class CookiesTest : ClientLoader(Int.MAX_VALUE) {
     private val hostname = "http://127.0.0.1/cookies"
     private val TEST_HOST = "$TEST_SERVER/cookies"
     private val domain = "127.0.0.1"
@@ -129,7 +129,6 @@ class CookiesTest : ClientLoader() {
             assertTrue(client.cookies("https://vk.com").isNotEmpty())
             assertTrue(client.cookies("https://m.vk.com").isNotEmpty())
             assertTrue(client.cookies("https://m.vk.com").isNotEmpty())
-
             assertTrue(client.cookies("https://google.com").isEmpty())
         }
     }

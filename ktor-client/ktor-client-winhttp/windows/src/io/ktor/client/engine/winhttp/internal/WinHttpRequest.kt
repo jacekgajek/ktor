@@ -18,7 +18,7 @@ import platform.windows.SECURITY_FLAG_IGNORE_UNKNOWN_CA
 import platform.winhttp.*
 import kotlin.coroutines.*
 
-@OptIn(ExperimentalForeignApi::class)
+@OptIn(ExperimentalForeignApi::class, ExperimentalStdlibApi::class)
 internal class WinHttpRequest @OptIn(ExperimentalForeignApi::class) constructor(
     hSession: COpaquePointer,
     data: HttpRequestData,

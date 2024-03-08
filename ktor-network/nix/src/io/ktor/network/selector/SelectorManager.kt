@@ -12,6 +12,7 @@ public actual fun SelectorManager(
     dispatcher: CoroutineContext
 ): SelectorManager = WorkerSelectorManager()
 
+@OptIn(ExperimentalStdlibApi::class)
 public actual interface SelectorManager : CoroutineScope, Closeable {
     /**
      * Notifies the selector that selectable has been closed.

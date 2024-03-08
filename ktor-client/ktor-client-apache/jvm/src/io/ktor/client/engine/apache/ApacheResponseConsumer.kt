@@ -6,78 +6,50 @@ package io.ktor.client.engine.apache
 
 import io.ktor.client.request.*
 import io.ktor.utils.io.*
-import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
+import kotlinx.io.*
+import kotlinx.io.unsafe.*
 import org.apache.http.*
 import org.apache.http.nio.*
 import org.apache.http.nio.protocol.*
 import org.apache.http.protocol.*
+import java.nio.*
 import kotlin.coroutines.*
 
-@OptIn(InternalCoroutinesApi::class)
 internal class ApacheResponseConsumer(
     val parentContext: CoroutineContext,
     private val requestData: HttpRequestData
-) : HttpAsyncResponseConsumer<Unit>, CoroutineScope {
+) : HttpAsyncResponseConsumer<Unit> {
     private val interestController = InterestControllerHolder()
 
-    private val consumerJob = Job(parentContext[Job])
-    override val coroutineContext: CoroutineContext = parentContext + consumerJob
-
-    private val waiting = atomic(false)
-
-    @Suppress("DEPRECATION")
-    private val channel = ByteChannel().also {
-        it.attachJob(consumerJob)
-    }
-
     private val responseDeferred = CompletableDeferred<HttpResponse>()
-
+    private val channel = ByteChannel()
     val responseChannel: ByteReadChannel = channel
 
-    init {
-        coroutineContext[Job]?.invokeOnCompletion(onCancelling = true) { cause ->
-            if (cause != null) {
-                responseDeferred.completeExceptionally(cause)
-                responseChannel.cancel(cause)
-            }
-        }
-    }
-
+    @OptIn(InternalAPI::class, SnapshotApi::class, UnsafeIoApi::class, InternalIoApi::class)
     override fun consumeContent(decoder: ContentDecoder, ioctrl: IOControl) {
-        check(!waiting.value)
-
-        var result: Int
-        do {
-            result = 0
-            channel.writeAvailable {
-                result = decoder.read(it)
+        var eof = false
+        UnsafeBufferAccessors.writeToTail(channel.writeBuffer.buffer, 1) { array, startIndex, endIndex ->
+            val buffer = ByteBuffer.wrap(array, startIndex, endIndex - startIndex)
+            val written = decoder.read(buffer)
+            if (written == -1) {
+                eof = true
+                0
+            } else {
+                written
             }
-            channel.flush()
-        } while (result > 0)
-
-        if (result < 0 || decoder.isCompleted) {
-            close()
-            return
         }
 
-        if (result == 0) {
-            interestController.suspendInput(ioctrl)
-            launch(Dispatchers.Unconfined) {
-                check(!waiting.getAndSet(true))
-                try {
-                    channel.awaitFreeSpace()
-                } finally {
-                    check(waiting.getAndSet(false))
-                    interestController.resumeInputIfPossible()
-                }
+        channel.flushWriteBuffer()
+        if (eof) {
+            runBlocking {
+                channel.flushAndClose()
             }
         }
     }
 
     override fun failed(cause: Exception) {
         val mappedCause = mapCause(cause, requestData)
-        consumerJob.completeExceptionally(mappedCause)
         responseDeferred.completeExceptionally(mappedCause)
         responseChannel.cancel(mappedCause)
     }
@@ -87,8 +59,9 @@ internal class ApacheResponseConsumer(
     }
 
     override fun close() {
-        channel.close()
-        consumerJob.complete()
+        runBlocking {
+            channel.flushAndClose()
+        }
     }
 
     override fun getException(): Exception? = channel.closedCause as? Exception
@@ -105,5 +78,5 @@ internal class ApacheResponseConsumer(
         responseDeferred.complete(response)
     }
 
-    public suspend fun waitForResponse(): HttpResponse = responseDeferred.await()
+    suspend fun waitForResponse(): HttpResponse = responseDeferred.await()
 }

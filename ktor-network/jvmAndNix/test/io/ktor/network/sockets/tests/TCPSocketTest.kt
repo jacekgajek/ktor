@@ -6,9 +6,9 @@ package io.ktor.network.sockets.tests
 
 import io.ktor.network.sockets.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.CancellationException
 import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
+import kotlinx.io.*
 import kotlin.test.*
 
 class TCPSocketTest {
@@ -30,7 +30,7 @@ class TCPSocketTest {
             clientOutput.writeStringUtf8("Hello, world\n")
             clientOutput.flush()
         } finally {
-            clientOutput.close()
+            clientOutput.flushAndClose()
         }
 
         val serverInput = serverConnection.openReadChannel()
@@ -47,7 +47,7 @@ class TCPSocketTest {
 
             assertEquals("Hello From Server", echo)
         } finally {
-            serverOutput.close()
+            serverOutput.flushAndClose()
         }
 
         serverConnection.close()
@@ -77,7 +77,7 @@ class TCPSocketTest {
             clientOutput.writeStringUtf8("Hello, world\n")
             clientOutput.flush()
         } finally {
-            clientOutput.close()
+            clientOutput.flushAndClose()
         }
 
         val serverInput = serverConnection.openReadChannel()
@@ -94,7 +94,7 @@ class TCPSocketTest {
 
             assertEquals("Hello From Server", echo)
         } finally {
-            serverOutput.close()
+            serverOutput.flushAndClose()
         }
 
         serverConnection.close()
@@ -118,9 +118,9 @@ class TCPSocketTest {
             val readChannel = client.openReadChannel()
             serverConnection.await()
 
-            client.cancel()
+            readChannel.cancel()
 
-            assertFailsWith<CancellationException> {
+            assertFailsWith<IOException> {
                 readChannel.readByte()
             }
         }

@@ -7,14 +7,13 @@ package io.ktor.server.test.base
 
 import io.ktor.junit.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.debug.junit5.*
 import org.junit.jupiter.api.*
 import java.lang.reflect.*
 import java.util.*
 import kotlin.time.*
 import kotlin.time.Duration.Companion.seconds
 
-@CoroutinesTimeout(5 * 60 * 1000)
+//@CoroutinesTimeout(5 * 60 * 1000)
 @ErrorCollectorTest
 actual abstract class BaseTest actual constructor() {
     actual open val timeout: Duration = 60.seconds // not used

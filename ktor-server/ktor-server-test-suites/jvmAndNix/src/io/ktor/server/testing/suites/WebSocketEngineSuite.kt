@@ -14,7 +14,6 @@ import io.ktor.server.test.base.*
 import io.ktor.server.websocket.*
 import io.ktor.util.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.bits.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
 import io.ktor.websocket.*
@@ -760,6 +759,7 @@ abstract class WebSocketEngineSuite<TEngine : ApplicationEngine, TConfiguration 
         }
     }
 
+    @OptIn(ExperimentalStdlibApi::class)
     private suspend inline fun useSocket(block: Connection.() -> Unit) {
         SelectorManager().use {
             aSocket(it).tcp().connect("localhost", port) {
@@ -770,7 +770,7 @@ abstract class WebSocketEngineSuite<TEngine : ApplicationEngine, TConfiguration 
                 try {
                     block(connection)
                     // for native, output should be closed explicitly
-                    connection.output.close()
+                    connection.output.flushAndClose()
                 } catch (cause: Throwable) {
                     throw cause
                 }

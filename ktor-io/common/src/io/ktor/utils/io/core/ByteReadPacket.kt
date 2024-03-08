@@ -2,60 +2,83 @@
 
 package io.ktor.utils.io.core
 
-import io.ktor.utils.io.bits.*
-import io.ktor.utils.io.core.internal.*
 import io.ktor.utils.io.pool.*
+import kotlinx.io.*
 
-/**
- * Read-only immutable byte packet. Could be consumed only once however it does support [copy] that doesn't copy every byte
- * but creates a new view instead. Once packet created it should be either completely read (consumed) or released
- * via [release].
- */
-@Suppress("DEPRECATION")
-public class ByteReadPacket internal constructor(
-    head: ChunkBuffer,
-    remaining: Long,
-    pool: ObjectPool<ChunkBuffer>
-) : Input(head, remaining, pool) {
-    public constructor(head: ChunkBuffer, pool: ObjectPool<ChunkBuffer>) : this(head, head.remainingAll(), pool)
+@Deprecated(
+    "Use Source instead",
+    ReplaceWith("Source", "kotlinx.io.Buffer")
+)
+public typealias ByteReadPacket = kotlinx.io.Source
 
-    init {
-        markNoMoreChunksAvailable()
-    }
+public val ByteReadPacketEmpty: ByteReadPacket = kotlinx.io.Buffer()
 
-    /**
-     * Returns a copy of the packet. The original packet and the copy could be used concurrently. Both need to be
-     * either completely consumed or released via [release]
-     */
-    public final fun copy(): ByteReadPacket = ByteReadPacket(head.copyAll(), remaining, pool)
-
-    final override fun fill(): ChunkBuffer? = null
-
-    final override fun fill(destination: Memory, offset: Int, length: Int): Int {
-        return 0
-    }
-
-    final override fun closeSource() {
-    }
-
-    @OptIn(ExperimentalStdlibApi::class)
-    override fun toString(): String {
-        return "ByteReadPacket[${hashCode().toHexString()}]"
-    }
-
-    public companion object {
-        public val Empty: ByteReadPacket = ByteReadPacket(ChunkBuffer.Empty, 0L, ChunkBuffer.EmptyPool)
-    }
-}
-
-public expect fun ByteReadPacket(
+public inline fun ByteReadPacket(
     array: ByteArray,
     offset: Int = 0,
-    length: Int = array.size,
-    block: (ByteArray) -> Unit
-): ByteReadPacket
+    length: Int = array.size
+): ByteReadPacket = kotlinx.io.Buffer().apply {
+    write(array, startIndex = offset, endIndex = offset + length)
+}
 
-@Suppress("NOTHING_TO_INLINE")
-public inline fun ByteReadPacket(array: ByteArray, offset: Int = 0, length: Int = array.size): ByteReadPacket {
-    return ByteReadPacket(array, offset, length) {}
+@OptIn(InternalIoApi::class)
+public val Source.remaining: Long
+    get() = buffer.size
+
+@Suppress("UNUSED_PARAMETER")
+@Deprecated(
+    "Use Buffer instead",
+    ReplaceWith("Buffer()", "kotlinx.io.Buffer")
+)
+public fun Sink(pool: ObjectPool<*>): kotlinx.io.Buffer = kotlinx.io.Buffer()
+
+@Deprecated(
+    "Use Buffer instead",
+    ReplaceWith("Buffer()", "kotlinx.io.Buffer")
+)
+public fun Sink(): kotlinx.io.Buffer = kotlinx.io.Buffer()
+
+@OptIn(InternalIoApi::class)
+public fun ByteReadPacket.readAvailable(out: Buffer): Int {
+    val result = buffer.size
+    out.transferFrom(this)
+    return result.toInt()
+}
+
+@OptIn(InternalIoApi::class)
+public fun ByteReadPacket.copy(): ByteReadPacket = buffer.copy()
+
+@OptIn(InternalIoApi::class)
+public fun ByteReadPacket.readShortLittleEndian(): Short {
+    return buffer.readShortLe()
+}
+
+@OptIn(InternalIoApi::class)
+public fun ByteReadPacket.discard(count: Long = Long.MAX_VALUE): Long {
+    val countToDiscard = minOf(count, remaining)
+    buffer.skip(countToDiscard)
+    return countToDiscard
+}
+
+public fun ByteReadPacket.forEach(block: (byte: Byte) -> Unit) {
+    TODO()
+}
+
+@OptIn(InternalIoApi::class)
+public fun ByteReadPacket.takeWhile(block: (Buffer) -> Boolean) {
+    block(buffer)
+}
+
+public fun ByteReadPacket.readFully(out: ByteArray, offset: Int = 0, length: Int = out.size - offset) {
+    readTo(out, offset, offset + length)
+}
+
+@OptIn(InternalIoApi::class, ExperimentalStdlibApi::class)
+public fun <T> ByteReadPacket.preview(function: (ByteReadPacket) -> T): T {
+    return buffer.peek().use(function)
+}
+
+@OptIn(InternalIoApi::class, ExperimentalStdlibApi::class)
+public fun <T> BytePacketBuilder.preview(function: (ByteReadPacket) -> T): T {
+    return buffer.peek().use(function)
 }

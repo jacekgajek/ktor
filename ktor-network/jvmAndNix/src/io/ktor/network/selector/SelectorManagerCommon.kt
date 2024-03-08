@@ -15,6 +15,7 @@ public expect fun SelectorManager(
 /**
  * SelectorManager interface allows [Selectable] wait for [SelectInterest].
  */
+@OptIn(ExperimentalStdlibApi::class)
 public expect interface SelectorManager : CoroutineScope, Closeable {
     /**
      * Notifies the selector that selectable has been closed.

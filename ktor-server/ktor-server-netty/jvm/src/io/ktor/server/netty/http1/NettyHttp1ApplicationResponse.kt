@@ -13,7 +13,6 @@ import io.ktor.utils.io.*
 import io.netty.buffer.*
 import io.netty.channel.*
 import io.netty.handler.codec.http.*
-import kotlinx.coroutines.CancellationException
 import kotlin.coroutines.*
 
 internal class NettyHttp1ApplicationResponse constructor(
@@ -38,7 +37,7 @@ internal class NettyHttp1ApplicationResponse constructor(
     override val headers: ResponseHeaders = object : ResponseHeaders() {
         override fun engineAppendHeader(name: String, value: String) {
             if (responseMessageSent) {
-                if (responseReady.isCancelled) throw CancellationException("Call execution has been cancelled")
+                if (responseReady.isCancelled) throw java.util.concurrent.CancellationException("Call execution has been cancelled")
                 throw UnsupportedOperationException(
                     "Headers can no longer be set because response was already completed"
                 )
@@ -91,22 +90,16 @@ internal class NettyHttp1ApplicationResponse constructor(
                 addFirst(NettyDirectDecoder())
             } else {
                 cancel()
-                val cause = CancellationException("HTTP upgrade has been cancelled")
+                val cause = java.util.concurrent.CancellationException("HTTP upgrade has been cancelled")
                 upgradedWriteChannel.cancel(cause)
                 throw cause
             }
         }
 
         val job = upgrade.upgrade(upgradedReadChannel, upgradedWriteChannel, engineContext, userAppContext)
-
-        job.invokeOnCompletion {
-            upgradedWriteChannel.close()
-            bodyHandler.close()
-            upgradedReadChannel.cancel()
-        }
-
         (call as NettyApplicationCall).responseWriteJob.join()
         job.join()
+        bodyHandler.close()
 
         context.channel().close()
     }

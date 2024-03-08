@@ -6,6 +6,7 @@ package io.ktor.network.sockets
 
 import io.ktor.network.selector.*
 import io.ktor.network.util.*
+import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.pool.*
 import kotlinx.atomicfu.*
@@ -64,7 +65,7 @@ internal class DatagramSendChannel(
         }
 
         if (result) {
-            element.packet.release()
+            element.packet.close()
         }
 
         return ChannelResult.success(Unit)

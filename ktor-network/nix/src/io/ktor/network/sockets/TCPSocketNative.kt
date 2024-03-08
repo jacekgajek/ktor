@@ -25,14 +25,6 @@ internal class TCPSocketNative(
     override val socketContext: Job
         get() = _context
 
-    @Suppress("DEPRECATION")
-    override fun attachForReading(channel: ByteChannel): WriterJob =
-        attachForReadingImpl(channel, descriptor, selectable, selector)
-
-    @Suppress("DEPRECATION")
-    override fun attachForWriting(channel: ByteChannel): ReaderJob =
-        attachForWritingImpl(channel, descriptor, selectable, selector)
-
     override fun close() {
         _context.complete()
         _context.invokeOnCompletion {
@@ -40,5 +32,13 @@ internal class TCPSocketNative(
             // Descriptor is closed by the selector manager
             selector.notifyClosed(selectable)
         }
+    }
+
+    override fun attachForReading(): ByteReadChannel {
+        TODO("Not yet implemented")
+    }
+
+    override fun attachForWriting(): ByteWriteChannel {
+        TODO("Not yet implemented")
     }
 }

@@ -52,9 +52,8 @@ internal class ByteChannelReplay(private val origin: ByteReadChannel) {
             origin.closedCause?.let { throw it }
             result.complete(body.build().readBytes())
         } catch (cause: Throwable) {
-            body.release()
+            body.close()
             result.completeExceptionally(cause)
-            throw cause
         }
     }.channel
 }

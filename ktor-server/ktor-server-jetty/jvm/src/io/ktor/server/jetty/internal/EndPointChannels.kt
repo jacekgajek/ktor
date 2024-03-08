@@ -50,11 +50,11 @@ internal class EndPointReader(
                     channel.writeFully(buffer)
                 }
             } catch (cause: ClosedChannelException) {
-                channel.close()
+                channel.flushAndClose()
             } catch (cause: Throwable) {
                 channel.close(cause)
             } finally {
-                channel.close()
+                channel.flushAndClose()
                 JettyWebSocketPool.recycle(buffer)
             }
         }

@@ -10,7 +10,7 @@ import kotlinx.coroutines.*
 import platform.Foundation.*
 import kotlin.coroutines.*
 
-@OptIn(UnsafeNumber::class)
+@OptIn(UnsafeNumber::class, ExperimentalStdlibApi::class)
 internal class DarwinSession(
     private val config: DarwinClientEngineConfig,
     requestQueue: NSOperationQueue?

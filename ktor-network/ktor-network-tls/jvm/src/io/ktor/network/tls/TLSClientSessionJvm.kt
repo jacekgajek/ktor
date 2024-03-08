@@ -25,12 +25,11 @@ internal actual suspend fun openTLSSession(
     try {
         handshake.negotiate()
     } catch (cause: ClosedSendChannelException) {
-        throw TLSException("Negotiation failed due to EOS", cause)
+        throw TLSException("Negotiation failed due to end of stream", cause)
     }
     return TLSSocket(handshake.input, handshake.output, socket, context)
 }
 
-@Suppress("DEPRECATION")
 private class TLSSocket(
     private val input: ReceiveChannel<TLSRecord>,
     private val output: SendChannel<TLSRecord>,
@@ -38,15 +37,15 @@ private class TLSSocket(
     override val coroutineContext: CoroutineContext
 ) : CoroutineScope, Socket by socket {
 
-    override fun attachForReading(channel: ByteChannel): WriterJob =
-        writer(coroutineContext + CoroutineName("cio-tls-input-loop"), channel) {
+    override fun attachForReading(): ByteReadChannel =
+        writer(coroutineContext + CoroutineName("cio-tls-input-loop")) {
             appDataInputLoop(this.channel)
-        }
+        }.channel
 
-    override fun attachForWriting(channel: ByteChannel): ReaderJob =
-        reader(coroutineContext + CoroutineName("cio-tls-output-loop"), channel) {
+    override fun attachForWriting(): ByteWriteChannel =
+        reader(coroutineContext + CoroutineName("cio-tls-output-loop")) {
             appDataOutputLoop(this.channel)
-        }
+        }.channel
 
     private suspend fun appDataInputLoop(pipe: ByteWriteChannel) {
         try {
@@ -58,12 +57,14 @@ private class TLSSocket(
                         pipe.writePacket(record.packet)
                         pipe.flush()
                     }
+
                     else -> throw TLSException("Unexpected record ${record.type} ($length bytes)")
                 }
             }
-        } catch (_: Throwable) {
+        } catch (cause: Throwable) {
+            pipe.close(cause)
         } finally {
-            pipe.close()
+            pipe.flushAndClose()
         }
     }
 

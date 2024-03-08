@@ -5,6 +5,7 @@
 package io.ktor.http.cio
 
 import io.ktor.http.*
+import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 
 /**
@@ -83,7 +84,7 @@ public actual class RequestResponseBuilder actual constructor() {
      * Release all resources hold by the builder
      */
     public actual fun release() {
-        packet.release()
+        packet.close()
     }
 }
 

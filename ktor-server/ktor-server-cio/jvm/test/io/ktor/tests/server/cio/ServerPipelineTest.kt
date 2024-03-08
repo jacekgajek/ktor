@@ -86,7 +86,7 @@ class ServerPipelineTest : CoroutineScope {
         assertEquals("", output.readUTF8Line())
         assertEquals("/", requestsReceived.single())
 
-        input.close()
+        input.flushAndClose()
         output.readRemaining().discard()
     }
 
@@ -121,7 +121,7 @@ class ServerPipelineTest : CoroutineScope {
         assertEquals("", output.readUTF8Line())
         assertEquals("/", requestsReceived.single())
 
-        input.close()
+        input.flushAndClose()
         output.readRemaining().discard()
     }
 
@@ -164,7 +164,7 @@ class ServerPipelineTest : CoroutineScope {
         delay(100)
         latch.complete()
 
-        input.close()
+        input.flushAndClose()
         output.readRemaining().discard()
     }
 
@@ -185,7 +185,7 @@ class ServerPipelineTest : CoroutineScope {
                 try {
                     output.discard()
                 } finally {
-                    input.close()
+                    input.flushAndClose()
                 }
             }
         }
@@ -204,7 +204,7 @@ class ServerPipelineTest : CoroutineScope {
                 requestHandled.complete()
                 request.release()
                 input.cancel()
-                output.close()
+                output.flushAndClose()
             }
 
             // send a single request
@@ -220,7 +220,7 @@ class ServerPipelineTest : CoroutineScope {
                 try {
                     output.discard()
                 } finally {
-                    input.close()
+                    input.flushAndClose()
                 }
             }
         }

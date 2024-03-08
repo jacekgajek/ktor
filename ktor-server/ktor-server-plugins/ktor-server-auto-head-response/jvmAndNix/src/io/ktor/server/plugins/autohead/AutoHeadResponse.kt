@@ -10,6 +10,7 @@ import io.ktor.server.application.*
 import io.ktor.server.application.hooks.*
 import io.ktor.server.plugins.*
 import io.ktor.util.*
+import io.ktor.utils.io.*
 
 /**
  * A plugin that provides the ability to automatically respond to a `HEAD` request for every route that has a `GET` defined.
@@ -26,7 +27,7 @@ public val AutoHeadResponse: ApplicationPlugin<Unit> = createApplicationPlugin("
     on(ResponseBodyReadyForSend) { call, content ->
         if (call.request.local.method != HttpMethod.Head) return@on
         if (content is OutgoingContent.NoContent) return@on
-        if (content is OutgoingContent.ReadChannelContent) content.readFrom().cancel(null)
+        if (content is OutgoingContent.ReadChannelContent) content.readFrom().cancel()
         transformBodyTo(HeadResponse(content))
     }
 }

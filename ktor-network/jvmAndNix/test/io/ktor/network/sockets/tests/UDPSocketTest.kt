@@ -4,10 +4,7 @@
 
 package io.ktor.network.sockets.tests
 
-import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
-import io.ktor.test.dispatcher.*
-import io.ktor.util.network.*
 import io.ktor.utils.io.core.*
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
@@ -143,7 +140,9 @@ class UDPSocketTest {
         socket.outgoing.close(AssertionError())
 
         assertEquals(1, done.value)
+        println("join")
         socket.socketContext.join()
+        println("joined")
         assertTrue(socket.isClosed)
     }
 

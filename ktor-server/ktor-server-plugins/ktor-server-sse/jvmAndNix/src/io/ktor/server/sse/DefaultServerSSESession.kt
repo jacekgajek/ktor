@@ -25,7 +25,7 @@ internal class DefaultServerSSESession(
 
     override suspend fun close() {
         mutex.withLock {
-            output.close()
+            output.flushAndClose()
         }
     }
 

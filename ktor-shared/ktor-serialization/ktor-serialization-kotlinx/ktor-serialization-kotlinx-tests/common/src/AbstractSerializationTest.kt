@@ -146,7 +146,7 @@ public abstract class AbstractSerializationTest<T : SerialFormat> {
                 val channel = ByteChannel()
                 GlobalScope.launch {
                     content.writeTo(channel)
-                    channel.close()
+                    channel.flushAndClose()
                 }
                 channel.readRemaining().readBytes()
             }

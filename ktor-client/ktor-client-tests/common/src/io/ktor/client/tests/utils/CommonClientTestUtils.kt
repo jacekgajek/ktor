@@ -39,6 +39,7 @@ fun testWithEngine(
 /**
  * Perform test with selected [client].
  */
+@OptIn(ExperimentalStdlibApi::class)
 private fun testWithClient(
     client: HttpClient,
     timeout: Long,
@@ -60,7 +61,7 @@ private fun testWithClient(
 /**
  * Perform test with selected client engine [factory].
  */
-@OptIn(DelicateCoroutinesApi::class)
+@OptIn(DelicateCoroutinesApi::class, ExperimentalStdlibApi::class)
 fun <T : HttpClientEngineConfig> testWithEngine(
     factory: HttpClientEngineFactory<T>,
     loader: ClientLoader? = null,

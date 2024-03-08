@@ -8,10 +8,7 @@ import io.ktor.client.*
 import io.ktor.client.engine.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.debug.*
-import kotlinx.coroutines.debug.junit5.*
-import org.junit.jupiter.api.extension.*
 import java.util.*
-import kotlin.test.*
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -33,6 +30,7 @@ actual abstract class ClientLoader actual constructor(val timeoutSeconds: Int) {
         onlyWithEngine: String?,
         block: suspend TestClientBuilder<HttpClientEngineConfig>.() -> Unit
     ) {
+        DebugProbes.install()
         for (engine in engines) {
             if (shouldSkip(engine, skipEngines, onlyWithEngine)) {
                 continue
@@ -45,8 +43,11 @@ actual abstract class ClientLoader actual constructor(val timeoutSeconds: Int) {
         }
     }
 
-    fun shouldSkip(engine: HttpClientEngineContainer, skipEngines: List<String>, onlyWithEngine: String?): Boolean =
-        skipEngines.any { shouldSkip(engine.toString(), it, onlyWithEngine) }
+    fun shouldSkip(engine: HttpClientEngineContainer, skipEngines: List<String>, onlyWithEngine: String?): Boolean {
+        val engineName = engine.toString()
+        if (onlyWithEngine != null && engineName != onlyWithEngine) return true
+        return skipEngines.any { shouldSkip(engineName, it, onlyWithEngine) }
+    }
 
     fun shouldSkip(engineName: String, skipEngine: String, onlyWithEngine: String?): Boolean {
         val locale = Locale.getDefault()

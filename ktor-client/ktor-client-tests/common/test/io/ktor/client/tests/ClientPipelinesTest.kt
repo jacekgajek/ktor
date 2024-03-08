@@ -15,7 +15,7 @@ import io.ktor.utils.io.*
 import kotlin.coroutines.*
 import kotlin.test.*
 
-class ClientPipelinesTest : ClientLoader() {
+class ClientPipelinesTest : ClientLoader(5) {
     @OptIn(InternalAPI::class)
     @Test
     fun testCanAddHeaders() = clientTests {

@@ -5,7 +5,6 @@
 package io.ktor.util
 
 import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
 import io.ktor.utils.io.pool.*
 import kotlinx.coroutines.*
 
@@ -25,6 +24,7 @@ public fun ByteReadChannel.split(coroutineScope: CoroutineScope): Pair<ByteReadC
         try {
             while (!isClosedForRead) {
                 val read = this@split.readAvailable(buffer)
+                if (read < 0) break
                 listOf(
                     async { first.writeFully(buffer, 0, read) },
                     async { second.writeFully(buffer, 0, read) }
@@ -38,8 +38,8 @@ public fun ByteReadChannel.split(coroutineScope: CoroutineScope): Pair<ByteReadC
             second.cancel(cause)
         } finally {
             ByteArrayPool.recycle(buffer)
-            first.close()
-            second.close()
+            first.flushAndClose()
+            second.flushAndClose()
         }
     }.invokeOnCompletion {
         it ?: return@invokeOnCompletion
@@ -53,7 +53,7 @@ public fun ByteReadChannel.split(coroutineScope: CoroutineScope): Pair<ByteReadC
 /**
  * Copy a source channel to both output channels chunk by chunk.
  */
-@OptIn(DelicateCoroutinesApi::class)
+@OptIn(DelicateCoroutinesApi::class, ExperimentalStdlibApi::class)
 public fun ByteReadChannel.copyToBoth(first: ByteWriteChannel, second: ByteWriteChannel) {
     GlobalScope.launch(Dispatchers.Unconfined) {
         try {
@@ -75,8 +75,8 @@ public fun ByteReadChannel.copyToBoth(first: ByteWriteChannel, second: ByteWrite
             first.close(cause)
             second.close(cause)
         } finally {
-            first.close()
-            second.close()
+            first.flushAndClose()
+            second.flushAndClose()
         }
     }.invokeOnCompletion {
         it ?: return@invokeOnCompletion
@@ -84,8 +84,3 @@ public fun ByteReadChannel.copyToBoth(first: ByteWriteChannel, second: ByteWrite
         second.close(it)
     }
 }
-
-/**
- * Read a channel to byte array.
- */
-public suspend fun ByteReadChannel.toByteArray(): ByteArray = readRemaining().readBytes()

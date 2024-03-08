@@ -37,19 +37,20 @@ internal class NettyHttp1Handler(
     private val state = NettyHttpHandlerState(runningLimit)
 
     override fun channelActive(context: ChannelHandlerContext) {
-        responseWriter = NettyHttpResponsePipeline(
-            context,
-            state,
-            coroutineContext
-        )
+        if (!this::responseWriter.isInitialized) {
+            responseWriter = NettyHttpResponsePipeline(
+                context,
+                state,
+                coroutineContext
+            )
 
-        context.channel().config().isAutoRead = false
-        context.channel().read()
-        context.pipeline().apply {
-            addLast(RequestBodyHandler(context))
-            addLast(callEventGroup, NettyApplicationCallHandler(userContext, enginePipeline))
+            context.channel().config().isAutoRead = false
+            context.channel().read()
+            context.pipeline().apply {
+                addLast(RequestBodyHandler(context))
+                addLast(callEventGroup, NettyApplicationCallHandler(userContext, enginePipeline))
+            }
         }
-        context.fireChannelActive()
     }
 
     override fun channelRead(context: ChannelHandlerContext, message: Any) {

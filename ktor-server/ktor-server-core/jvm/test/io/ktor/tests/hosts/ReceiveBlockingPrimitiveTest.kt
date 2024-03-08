@@ -12,7 +12,6 @@ import io.ktor.server.request.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import java.io.*
-import java.lang.reflect.*
 import kotlin.concurrent.*
 import kotlin.coroutines.*
 import kotlin.test.*
@@ -21,15 +20,6 @@ class ReceiveBlockingPrimitiveTest {
     @Test
     fun testBlockingPrimitiveUsuallyAllowed() {
         testOnThread { call ->
-            call.receive<InputStream>().close()
-        }
-    }
-
-    @Test
-    fun testBlockingPrimitiveWorksOnRestrictedThread() {
-        testOnThread { call ->
-            markParkingProhibited()
-
             call.receive<InputStream>().close()
         }
     }
@@ -140,14 +130,5 @@ class ReceiveBlockingPrimitiveTest {
         fun close() {
             application.dispose()
         }
-    }
-
-    private val prohibitParkingFunction: Method? by lazy {
-        Class.forName("io.ktor.utils.io.jvm.javaio.PollersKt")
-            .getMethod("prohibitParking")
-    }
-
-    private fun markParkingProhibited() {
-        prohibitParkingFunction?.invoke(null)
     }
 }

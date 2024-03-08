@@ -27,4 +27,6 @@ public actual interface Selectable : Closeable, DisposableHandle {
      * Apply [state] flag of [interest] to [interestedOps]. Notice that is doesn't actually change selection key.
      */
     public fun interestOp(interest: SelectInterest, state: Boolean)
+
+    public fun cancel(cause: Throwable)
 }

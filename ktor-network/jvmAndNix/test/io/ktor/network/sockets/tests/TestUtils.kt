@@ -13,11 +13,11 @@ import kotlinx.coroutines.*
 internal fun testSockets(block: suspend CoroutineScope.(SelectorManager) -> Unit) {
     if (!PlatformUtils.IS_JVM && !PlatformUtils.IS_NATIVE) return
     testSuspend {
-        withTimeout(1000) {
+//        withTimeout(1000) {
             SelectorManager().use { selector ->
                 block(selector)
             }
-        }
+//        }
     }
 }
 

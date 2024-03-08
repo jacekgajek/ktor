@@ -9,7 +9,8 @@ import io.ktor.utils.io.*
 import io.ktor.utils.io.bits.*
 import io.ktor.utils.io.pool.*
 import kotlinx.coroutines.*
-import java.nio.ByteBuffer
+import kotlinx.io.*
+import java.nio.*
 import java.util.zip.*
 import kotlin.coroutines.*
 
@@ -90,7 +91,11 @@ private suspend fun ByteReadChannel.deflateTo(
         if (gzip) {
             destination.putGzipTrailer(crc, deflater)
         }
+    } catch (cause: IOException) {
+        destination.close(cause)
+        throw cause
     } finally {
+        destination.flushAndClose()
         deflater.end()
         pool.recycle(input)
         pool.recycle(compressed)
@@ -107,7 +112,9 @@ public fun ByteReadChannel.deflated(
     pool: ObjectPool<ByteBuffer> = KtorDefaultPool,
     coroutineContext: CoroutineContext = Dispatchers.Unconfined
 ): ByteReadChannel = GlobalScope.writer(coroutineContext, autoFlush = true) {
+    println("Deflating")
     this@deflated.deflateTo(channel, gzip, pool)
+    println("Deflated")
 }.channel
 
 /**

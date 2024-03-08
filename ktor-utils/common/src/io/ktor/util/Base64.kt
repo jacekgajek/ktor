@@ -90,8 +90,8 @@ public fun String.decodeBase64Bytes(): ByteArray = buildPacket {
 public fun ByteReadPacket.decodeBase64Bytes(): Input = buildPacket {
     val data = ByteArray(4)
 
-    while (remaining > 0) {
-        val read = readAvailable(data)
+    while (this@decodeBase64Bytes.remaining > 0) {
+        val read = this@decodeBase64Bytes.readAvailable(data)
 
         val chunk = data.foldIndexed(0) { index, result, current ->
             result or (current.fromBase64().toInt() shl ((3 - index) * 6))

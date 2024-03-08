@@ -51,7 +51,6 @@ internal class CIOApplicationResponse(
         sendResponseMessage(contentReady = false)
 
         val upgradedJob = upgrade.upgrade(input, output, engineDispatcher, userDispatcher)
-        upgradedJob.invokeOnCompletion { output.close(); input.cancel() }
         upgradedJob.join()
     }
 
@@ -60,13 +59,13 @@ internal class CIOApplicationResponse(
         val channel = preparedBodyChannel()
         return withContext(Dispatchers.Unconfined) {
             channel.writeFully(bytes)
-            channel.close()
+            channel.flushAndClose()
         }
     }
 
     override suspend fun respondNoContent(content: OutgoingContent.NoContent) {
         sendResponseMessage(contentReady = true)
-        output.close()
+        output.flushAndClose()
     }
 
     override suspend fun respondOutgoingContent(content: OutgoingContent) {
@@ -80,7 +79,7 @@ internal class CIOApplicationResponse(
         }
 
         super.respondOutgoingContent(content)
-        chunkedChannel?.close()
+        chunkedChannel?.flushAndClose()
         chunkedJob?.join()
     }
 
@@ -116,7 +115,7 @@ internal class CIOApplicationResponse(
         val chunkedOutput = encoderJob.channel
 
         chunkedChannel = chunkedOutput
-        chunkedJob = encoderJob
+        chunkedJob = encoderJob.job
 
         return chunkedOutput
     }

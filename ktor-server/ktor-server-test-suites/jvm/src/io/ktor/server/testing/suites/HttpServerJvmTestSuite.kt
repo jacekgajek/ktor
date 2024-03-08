@@ -13,19 +13,17 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.test.base.*
-import io.ktor.server.testing.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.streams.*
 import kotlinx.coroutines.*
-import org.junit.jupiter.api.*
+import kotlinx.coroutines.debug.*
 import java.net.*
 import java.nio.*
 import java.time.*
 import java.util.concurrent.atomic.*
 import kotlin.coroutines.*
 import kotlin.test.*
-import kotlin.test.Test
 import kotlin.text.toByteArray
 import kotlin.time.Duration.Companion.seconds
 
@@ -233,7 +231,7 @@ abstract class HttpServerJvmTestSuite<TEngine : ApplicationEngine, TConfiguratio
                                     channel.flush()
                                 }
 
-                                channel.close()
+                                channel.flushAndClose()
                             }
                         }
                     )
@@ -287,7 +285,7 @@ abstract class HttpServerJvmTestSuite<TEngine : ApplicationEngine, TConfiguratio
                                     channel.flush()
                                 }
 
-                                channel.close()
+                                channel.flushAndClose()
                             }
                         }
                     )
@@ -324,6 +322,12 @@ abstract class HttpServerJvmTestSuite<TEngine : ApplicationEngine, TConfiguratio
 
     @Test
     open fun testUpgrade() {
+        DebugProbes.install()
+        GlobalScope.launch {
+            delay(5000)
+//            DebugProbes.dumpCoroutines()
+        }
+
         val completed = CompletableDeferred<Unit>()
 
         createAndStartServer {
@@ -346,12 +350,16 @@ abstract class HttpServerJvmTestSuite<TEngine : ApplicationEngine, TConfiguratio
                                 try {
                                     val bb = ByteBuffer.allocate(8)
                                     input.readFully(bb)
+                                    println("long received")
+                                    assertEquals(8, bb.position())
                                     bb.flip()
                                     output.writeFully(bb)
-                                    output.close()
+                                    output.flushAndClose()
+                                    println("Flushed and closed $output")
                                     input.readRemaining().use {
                                         assertEquals(0, it.remaining)
                                     }
+                                    println("Completed")
                                     completed.complete(Unit)
                                 } catch (t: Throwable) {
                                     completed.completeExceptionally(t)
@@ -400,7 +408,7 @@ abstract class HttpServerJvmTestSuite<TEngine : ApplicationEngine, TConfiguratio
                     } catch (t: Throwable) {
                         ch.close(t)
                     } finally {
-                        ch.close()
+                        ch.flushAndClose()
                     }
                 }
 
@@ -422,8 +430,10 @@ abstract class HttpServerJvmTestSuite<TEngine : ApplicationEngine, TConfiguratio
                     }
                     flush()
                 }
+                println("long sent")
 
                 assertEquals(0x1122334455667788L, ch.readLong())
+                println("long received")
 
                 close()
 
@@ -515,3 +525,4 @@ abstract class HttpServerJvmTestSuite<TEngine : ApplicationEngine, TConfiguratio
             .replace("200 OK", "200")
             .replace("400 Bad Request", "400")
 }
+

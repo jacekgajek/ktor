@@ -10,6 +10,7 @@ import io.ktor.utils.io.*
 import io.ktor.utils.io.ByteChannel
 import io.ktor.utils.io.pool.*
 import kotlinx.coroutines.*
+import kotlinx.io.*
 import java.nio.*
 import java.nio.channels.*
 
@@ -74,6 +75,7 @@ internal fun CoroutineScope.attachForWritingImpl(
     }
 }
 
+@OptIn(InternalAPI::class, InternalIoApi::class)
 @Suppress("DEPRECATION")
 internal fun CoroutineScope.attachForWritingDirectImpl(
     channel: ByteChannel,
@@ -81,44 +83,39 @@ internal fun CoroutineScope.attachForWritingDirectImpl(
     selectable: Selectable,
     selector: SelectorManager,
     socketOptions: SocketOptions.TCPClientSocketOptions? = null
-): ReaderJob = reader(Dispatchers.Unconfined + CoroutineName("cio-to-nio-writer"), channel) {
+): ReaderJob = reader(Dispatchers.IO + CoroutineName("cio-to-nio-writer"), channel) {
     selectable.interestOp(SelectInterest.WRITE, false)
     try {
-        @Suppress("DEPRECATION")
-        channel.lookAheadSuspend {
-            val timeout = if (socketOptions?.socketTimeout != null) {
-                createTimeout("writing-direct", socketOptions.socketTimeout) {
-                    channel.close(SocketTimeoutException())
-                }
-            } else {
-                null
+        val timeout = if (socketOptions?.socketTimeout != null) {
+            createTimeout("writing-direct", socketOptions.socketTimeout) {
+                channel.close(SocketTimeoutException())
             }
-
-            while (true) {
-                val buffer = request(0, 1)
-                if (buffer == null) {
-                    if (!awaitAtLeast(1)) break
-                    continue
-                }
-
-                while (buffer.hasRemaining()) {
-                    var rc = 0
-
-                    timeout.withTimeout {
-                        do {
-                            rc = nioChannel.write(buffer)
-                            if (rc == 0) {
-                                selectable.interestOp(SelectInterest.WRITE, true)
-                                selector.select(selectable, SelectInterest.WRITE)
-                            }
-                        } while (buffer.hasRemaining() && rc == 0)
-                    }
-
-                    consumed(rc)
-                }
-            }
-            timeout?.finish()
+        } else {
+            null
         }
+
+        val readBuffer = channel.readBuffer
+        while (!channel.isClosedForRead) {
+            if (readBuffer.exhausted()) {
+                channel.awaitContent()
+            }
+
+            while (!readBuffer.exhausted()) {
+                var rc = 0L
+
+                timeout.withTimeout {
+                    do {
+                        rc = nioChannel.write(readBuffer.buffer)
+                        if (rc == 0L) {
+                            selectable.interestOp(SelectInterest.WRITE, true)
+                            selector.select(selectable, SelectInterest.WRITE)
+                        }
+                    } while (!readBuffer.exhausted() && rc == 0L)
+                }
+            }
+        }
+        timeout?.finish()
+        channel.closedCause?.let { throw it }
     } finally {
         selectable.interestOp(SelectInterest.WRITE, false)
         if (nioChannel is SocketChannel) {

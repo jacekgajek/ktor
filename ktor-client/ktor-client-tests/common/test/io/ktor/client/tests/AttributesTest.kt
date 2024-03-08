@@ -11,7 +11,7 @@ import io.ktor.client.tests.utils.*
 import io.ktor.util.*
 import kotlin.test.*
 
-class AttributesTest : ClientLoader() {
+class AttributesTest : ClientLoader(Int.MAX_VALUE) {
     @Test
     fun testKeepAttributes() = clientTests {
         val attrName = "my-key"
@@ -34,9 +34,10 @@ class AttributesTest : ClientLoader() {
                         "test-data"
                     )
                 }
-            }.body<String>()
+            }
 
-            assertEquals("hello", response)
+            val body = response.body<String>()
+            assertEquals("hello", body)
         }
     }
 }

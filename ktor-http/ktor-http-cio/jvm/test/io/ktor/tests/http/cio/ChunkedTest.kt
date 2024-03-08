@@ -8,12 +8,14 @@ import io.ktor.http.cio.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.streams.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.debug.junit5.*
+import kotlinx.io.*
 import org.junit.jupiter.api.*
-import java.io.*
 import java.nio.*
 import kotlin.test.*
 import kotlin.test.Test
 
+@CoroutinesTimeout(10000)
 class ChunkedTest {
     @Test
     fun testEmptyBroken(): Unit = runBlocking {
@@ -44,7 +46,7 @@ class ChunkedTest {
         val output = ByteChannel()
         launch {
             decodeChunked(input, output)
-            output.close()
+            output.flushAndClose()
         }
 
         val content = output.readRemaining().readText()
@@ -128,7 +130,7 @@ class ChunkedTest {
             try {
                 encodeChunked(encoded, ByteReadChannel.Empty)
             } finally {
-                encoded.close()
+                encoded.flushAndClose()
             }
         }
 
@@ -146,7 +148,7 @@ class ChunkedTest {
             try {
                 encodeChunked(encoded, output)
             } finally {
-                encoded.close()
+                encoded.flushAndClose()
             }
         }
 
@@ -156,11 +158,11 @@ class ChunkedTest {
         output.writeStringUtf8("45")
         yield()
         output.writeStringUtf8("6")
-        output.close()
+        output.flushAndClose()
         yield()
 
         val encodedText = encoded.readRemaining().inputStream().reader().readText()
-        assertEquals("6\r\n123456\r\n0\r\n\r\n", encodedText)
+        assertEquals("3\r\n123\r\n2\r\n45\r\n1\r\n6\r\n0\r\n\r\n", encodedText)
     }
 
     @Test
@@ -179,7 +181,7 @@ class ChunkedTest {
                 sb.append(s)
                 content.writeStringUtf8(s)
             }
-            content.close()
+            content.flushAndClose()
             written.complete(sb.toString())
         }
 
@@ -187,7 +189,7 @@ class ChunkedTest {
             try {
                 encodeChunked(encoded, content)
             } finally {
-                encoded.close()
+                encoded.flushAndClose()
             }
         }
 

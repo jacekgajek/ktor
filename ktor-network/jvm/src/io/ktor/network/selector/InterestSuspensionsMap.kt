@@ -4,30 +4,24 @@
 
 package io.ktor.network.selector
 
+import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
-import java.util.concurrent.atomic.*
 
 public class InterestSuspensionsMap {
-    @Volatile
-    @Suppress("unused")
-    private var readHandlerReference: CancellableContinuation<Unit>? = null
-
-    @Volatile
-    @Suppress("unused")
-    private var writeHandlerReference: CancellableContinuation<Unit>? = null
-
-    @Volatile
-    @Suppress("unused")
-    private var connectHandlerReference: CancellableContinuation<Unit>? = null
-
-    @Volatile
-    @Suppress("unused")
-    private var acceptHandlerReference: CancellableContinuation<Unit>? = null
+    private val readHandler = atomic<CancellableContinuation<Unit>?>(null)
+    private val writeHandler = atomic<CancellableContinuation<Unit>?>(null)
+    private val connectHandler = atomic<CancellableContinuation<Unit>?>(null)
+    private val acceptHandler = atomic<CancellableContinuation<Unit>?>(null)
 
     public fun addSuspension(interest: SelectInterest, continuation: CancellableContinuation<Unit>) {
-        val updater = updater(interest)
+        val result = when (interest) {
+            SelectInterest.READ -> readHandler.getAndSet(continuation)
+            SelectInterest.WRITE -> writeHandler.getAndSet(continuation)
+            SelectInterest.ACCEPT -> acceptHandler.getAndSet(continuation)
+            SelectInterest.CONNECT -> connectHandler.getAndSet(continuation)
+        }
 
-        if (!updater.compareAndSet(this, null, continuation)) {
+        if (result != null && !result.isCancelled && !result.isCompleted) {
             throw IllegalStateException("Handler for ${interest.name} is already registered")
         }
     }
@@ -38,7 +32,7 @@ public class InterestSuspensionsMap {
 
         for (ordinal in flags.indices) {
             if (flags[ordinal] and readyOps != 0) {
-                removeSuspension(ordinal)?.block()
+                removeSuspension(flags[ordinal])?.block()
             }
         }
     }
@@ -49,35 +43,22 @@ public class InterestSuspensionsMap {
         }
     }
 
-    public fun removeSuspension(interest: SelectInterest): CancellableContinuation<Unit>? =
-        updater(interest).getAndSet(this, null)
-
-    public fun removeSuspension(interestOrdinal: Int): CancellableContinuation<Unit>? =
-        updaters[interestOrdinal].getAndSet(this, null)
-
-    override fun toString(): String {
-        return "R $readHandlerReference W $writeHandlerReference C $connectHandlerReference A $acceptHandlerReference"
+    public fun removeSuspension(interest: SelectInterest): CancellableContinuation<Unit>? = when (interest) {
+        SelectInterest.READ -> readHandler.getAndSet(null)
+        SelectInterest.WRITE -> writeHandler.getAndSet(null)
+        SelectInterest.ACCEPT -> acceptHandler.getAndSet(null)
+        SelectInterest.CONNECT -> connectHandler.getAndSet(null)
     }
 
-    public companion object {
-        @Suppress("UNCHECKED_CAST")
-        private val updaters = SelectInterest.AllInterests.map { interest ->
-            val property = when (interest) {
-                SelectInterest.READ -> InterestSuspensionsMap::readHandlerReference
-                SelectInterest.WRITE -> InterestSuspensionsMap::writeHandlerReference
-                SelectInterest.ACCEPT -> InterestSuspensionsMap::acceptHandlerReference
-                SelectInterest.CONNECT -> InterestSuspensionsMap::connectHandlerReference
-            }
-            AtomicReferenceFieldUpdater.newUpdater(
-                InterestSuspensionsMap::class.java,
-                CancellableContinuation::class.java,
-                property.name
-            ) as AtomicReferenceFieldUpdater<InterestSuspensionsMap, CancellableContinuation<Unit>?>
-        }.toTypedArray()
+    public fun removeSuspension(interestOrdinal: Int): CancellableContinuation<Unit>? = when (interestOrdinal) {
+        SelectInterest.READ.flag -> readHandler.getAndSet(null)
+        SelectInterest.WRITE.flag -> writeHandler.getAndSet(null)
+        SelectInterest.ACCEPT.flag -> acceptHandler.getAndSet(null)
+        SelectInterest.CONNECT.flag -> connectHandler.getAndSet(null)
+        else -> throw IllegalArgumentException("Invalid interest ordinal $interestOrdinal")
+    }
 
-        private fun updater(
-            interest: SelectInterest
-        ): AtomicReferenceFieldUpdater<InterestSuspensionsMap, CancellableContinuation<Unit>?> =
-            updaters[interest.ordinal]
+    override fun toString(): String {
+        return "R ${readHandler.value} W ${writeHandler.value} C ${connectHandler.value} A ${acceptHandler.value}"
     }
 }

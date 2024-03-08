@@ -6,8 +6,8 @@ package io.ktor.websocket
 
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.bits.*
 import io.ktor.utils.io.core.*
+import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.*
@@ -72,7 +72,7 @@ internal class RawWebSocketCommon(
             _outgoing.close(t)
         } finally {
             _outgoing.close(CancellationException("WebSocket closed.", null))
-            output.close()
+            output.flushAndClose()
         }
 
         while (true) when (val message = _outgoing.tryReceive().getOrNull() ?: break) {

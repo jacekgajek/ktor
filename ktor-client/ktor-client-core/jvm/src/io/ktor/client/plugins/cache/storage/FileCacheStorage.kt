@@ -97,7 +97,7 @@ private class FileCacheStorage(
                         for (cache in caches) {
                             writeCache(channel, cache)
                         }
-                        channel.close()
+                        channel.flushAndClose()
                     }
                     channel.copyTo(output)
                 }

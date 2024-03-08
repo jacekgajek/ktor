@@ -75,7 +75,7 @@ class RawWebSocketTest : BaseTest() {
 
     @Test
     fun testServerIncomingDisconnected(): Unit = runTest {
-        client2server.close()
+        client2server.flushAndClose()
         assertNull(server.incoming.receiveCatching().getOrNull())
         server.outgoing.send(Frame.Close())
 

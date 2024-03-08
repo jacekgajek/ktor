@@ -19,7 +19,7 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Start a http server with [settings] invoking [handler] for every request
  */
-@OptIn(InternalAPI::class)
+@OptIn(InternalAPI::class, ExperimentalStdlibApi::class)
 public fun CoroutineScope.httpServer(
     settings: HttpServerSettings,
     handler: HttpRequestHandler

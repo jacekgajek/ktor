@@ -11,6 +11,7 @@ import io.ktor.server.application.hooks.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
+import io.ktor.utils.io.*
 import java.io.*
 import java.net.*
 import java.nio.file.*
@@ -40,7 +41,7 @@ private val StaticContentAutoHead = createRouteScopedPlugin("StaticContentAutoHe
 
     on(ResponseBodyReadyForSend) { call, content ->
         check(call.request.local.method == HttpMethod.Head)
-        if (content is OutgoingContent.ReadChannelContent) content.readFrom().cancel(null)
+        if (content is OutgoingContent.ReadChannelContent) content.readFrom().cancel()
         transformBodyTo(HeadResponse(content))
     }
 }

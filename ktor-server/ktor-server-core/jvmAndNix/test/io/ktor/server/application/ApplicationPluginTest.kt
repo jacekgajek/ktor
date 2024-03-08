@@ -323,7 +323,7 @@ class ApplicationPluginTest {
 
                     return@transformBody ByteChannel(false).apply {
                         writeInt(data.x)
-                        close()
+                        flushAndClose()
                     }
                 }
             }

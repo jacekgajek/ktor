@@ -48,7 +48,7 @@ internal fun CoroutineScope.attachForReadingImpl(
                 }
 
                 if (rc == -1) {
-                    channel.close()
+                    channel.flushAndClose()
                     break
                 } else {
                     selectable.interestOp(SelectInterest.READ, false)
@@ -98,7 +98,7 @@ internal fun CoroutineScope.attachForReadingDirectImpl(
                 val rc = channel.readFrom(nioChannel)
 
                 if (rc == -1) {
-                    channel.close()
+                    channel.flushAndClose()
                     return@withTimeout
                 }
 
@@ -115,7 +115,7 @@ internal fun CoroutineScope.attachForReadingDirectImpl(
 
         timeout?.finish()
         channel.closedCause?.let { throw it }
-        channel.close()
+        channel.flushAndClose()
     } finally {
         if (nioChannel is SocketChannel) {
             try {

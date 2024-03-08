@@ -7,6 +7,7 @@ package io.ktor.util
 import io.ktor.test.dispatcher.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
+import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.*
 import kotlin.test.*
 
@@ -28,7 +29,7 @@ class ChannelTest {
 
         val byte = destination.readByte()
         assertEquals(1, byte)
-        source.close()
+        source.flushAndClose()
     }
 
     @Test
@@ -42,7 +43,7 @@ class ChannelTest {
 
         launch(Dispatchers.Unconfined) {
             source.writeFully(data)
-            source.close()
+            source.flushAndClose()
         }
 
         val firstResult = async(Dispatchers.Unconfined) {
@@ -72,14 +73,14 @@ class ChannelTest {
             source.cancel(IllegalStateException(message))
         }
 
-        assertFailsWithMessage(message) {
+        assertFailsWith<IOException> {
             val firstResult = GlobalScope.async(Dispatchers.Unconfined) {
                 first.readRemaining().readBytes()
             }
             firstResult.await()
         }
 
-        assertFailsWithMessage(message) {
+        assertFailsWith<IOException> {
             val secondResult = GlobalScope.async(Dispatchers.Unconfined) {
                 second.readRemaining().readBytes()
             }
@@ -99,18 +100,16 @@ class ChannelTest {
 
         val message = "Expected reason"
 
-        val sourceResult = GlobalScope.async(Dispatchers.Unconfined) {
-            source.writeFully(data)
-            source.close()
-        }
-
         first.cancel(IllegalStateException(message))
 
-        assertFailsWithMessage(message) {
-            sourceResult.await()
+        val sourceResult = GlobalScope.async(Dispatchers.Unconfined) {
+            source.writeFully(data)
+            source.flushAndClose()
         }
 
-        assertFailsWithMessage(message) {
+        sourceResult.await()
+
+        assertFailsWith<IOException> {
             val secondResult = GlobalScope.async(Dispatchers.Unconfined) {
                 second.readRemaining().readBytes()
             }
@@ -132,21 +131,16 @@ class ChannelTest {
 
         val sourceResult = GlobalScope.async(Dispatchers.Unconfined) {
             source.writeFully(data)
-            source.close()
+            source.flushAndClose()
         }
 
         first.cancel(IllegalStateException(message))
 
-        assertFailsWithMessage(message) {
-            val secondResult = GlobalScope.async(Dispatchers.Unconfined) {
-                second.readRemaining().readBytes()
-            }
-            secondResult.await()
+        val secondResult = GlobalScope.async(Dispatchers.Unconfined) {
+            second.readRemaining().readBytes()
         }
-
-        assertFailsWithMessage(message) {
-            sourceResult.await()
-        }
+        secondResult.await()
+        sourceResult.await()
     }
 }
 

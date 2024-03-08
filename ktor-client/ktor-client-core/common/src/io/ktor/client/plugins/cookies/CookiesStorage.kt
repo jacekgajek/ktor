@@ -11,6 +11,7 @@ import io.ktor.utils.io.core.*
 /**
  * A storage for [Cookie].
  */
+@OptIn(ExperimentalStdlibApi::class)
 public interface CookiesStorage : Closeable {
     /**
      * Gets a map of [String] to [Cookie] for a specific host.

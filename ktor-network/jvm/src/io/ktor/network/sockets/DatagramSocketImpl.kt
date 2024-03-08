@@ -13,12 +13,9 @@ import java.nio.*
 import java.nio.channels.*
 
 internal class DatagramSocketImpl(
-    override val channel: DatagramChannel,
-    selector: SelectorManager
+    override val channel: DatagramChannel, selector: SelectorManager
 ) : BoundDatagramSocket, ConnectedDatagramSocket, NIOSocketImpl<DatagramChannel>(
-    channel,
-    selector,
-    DefaultDatagramByteBufferPool
+    channel, selector
 ) {
     override val localAddress: SocketAddress
         get() {
@@ -27,8 +24,7 @@ internal class DatagramSocketImpl(
             } else {
                 channel.socket().localSocketAddress
             }
-            return localAddress?.toSocketAddress()
-                ?: throw IllegalStateException("Channel is not yet bound")
+            return localAddress?.toSocketAddress() ?: throw IllegalStateException("Channel is not yet bound")
         }
 
     override val remoteAddress: SocketAddress
@@ -38,8 +34,7 @@ internal class DatagramSocketImpl(
             } else {
                 channel.socket().remoteSocketAddress
             }
-            return remoteAddress?.toSocketAddress()
-                ?: throw IllegalStateException("Channel is not yet connected")
+            return remoteAddress?.toSocketAddress() ?: throw IllegalStateException("Channel is not yet connected")
         }
 
     private val sender: SendChannel<Datagram> = DatagramSendChannel(channel, this)

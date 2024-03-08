@@ -47,7 +47,7 @@ class PostTest : ClientLoader() {
                             channel.writeStringUtf8(content)
                             delay(1000)
                             channel.writeStringUtf8(content)
-                            channel.close()
+                            channel.flushAndClose()
                         }
                     }
                 )

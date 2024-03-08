@@ -10,7 +10,6 @@ import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.internal.*
 import io.ktor.server.http.*
-import io.ktor.server.plugins.*
 import io.ktor.server.response.*
 import io.ktor.util.*
 import io.ktor.util.cio.*
@@ -82,10 +81,12 @@ public abstract class BaseApplicationResponse(
                 // TODO: What should we do if TransferEncoding was set and length is present?
                 headers.append(HttpHeaders.ContentLength, contentLength.toStringFast(), safeOnly = false)
             }
+
             !transferEncodingSet -> {
                 when (content) {
                     is OutgoingContent.ProtocolUpgrade -> {
                     }
+
                     is OutgoingContent.NoContent -> headers.append(HttpHeaders.ContentLength, "0", safeOnly = false)
                     else -> headers.append(HttpHeaders.TransferEncoding, "chunked", safeOnly = false)
                 }
@@ -138,13 +139,9 @@ public abstract class BaseApplicationResponse(
             is OutgoingContent.ReadChannelContent -> {
                 // First call user code to acquire read channel, because it could fail
                 val readChannel = content.readFrom()
-                try {
-                    // If channel is fine, commit headers and pipe data
-                    commitHeaders(content)
-                    respondFromChannel(readChannel)
-                } finally {
-                    readChannel.cancel()
-                }
+                // If channel is fine, commit headers and pipe data
+                commitHeaders(content)
+                respondFromChannel(readChannel)
             }
 
             // Do nothing, but maintain `when` exhaustiveness
@@ -211,9 +208,8 @@ public abstract class BaseApplicationResponse(
     protected open suspend fun respondFromChannel(readChannel: ByteReadChannel) {
         responseChannel().use {
             val length = headers[HttpHeaders.ContentLength]?.toLong()
-            val copied = withContext(Dispatchers.Unconfined) {
-                readChannel.copyTo(this@use, length ?: Long.MAX_VALUE)
-            }
+            val copied = readChannel.copyTo(this@use, length ?: Long.MAX_VALUE)
+            println("Copy to DONE")
 
             length ?: return@use
             val discarded = readChannel.discard(max = 1)

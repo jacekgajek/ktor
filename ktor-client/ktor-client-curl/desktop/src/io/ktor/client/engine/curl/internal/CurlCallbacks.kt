@@ -91,7 +91,7 @@ internal fun onBodyChunkRequested(
     @Suppress("DEPRECATION")
     val readCount = try {
         body.readAvailable(1) { source: Buffer ->
-            source.readAvailable(buffer, 0, requested)
+            source.readAvailable(buffer)
         }
     } catch (cause: Throwable) {
         return -1

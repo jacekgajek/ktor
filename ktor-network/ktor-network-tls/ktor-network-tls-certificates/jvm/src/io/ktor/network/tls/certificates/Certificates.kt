@@ -13,12 +13,10 @@ import java.net.*
 import java.security.*
 import java.security.cert.*
 import java.security.cert.Certificate
-import java.text.*
 import java.time.*
-import java.time.format.DateTimeFormatter
-import java.util.*
+import java.time.format.*
 import javax.net.ssl.*
-import javax.security.auth.x500.X500Principal
+import javax.security.auth.x500.*
 import kotlin.time.*
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
@@ -541,7 +539,6 @@ private fun Int.derLength(): Int {
  * Length: 1 Byte (0x01)
  * Value: 0b1111 1111 if true or 0b0000 0000 if false
  */
-@OptIn(ExperimentalUnsignedTypes::class)
 private fun BytePacketBuilder.writeDerBoolean(value: Boolean) {
     writeDerType(0, 1, true)
     writeDerLength(1)

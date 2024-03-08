@@ -6,7 +6,6 @@ package io.ktor.client.network.sockets
 
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
-import io.ktor.util.*
 import io.ktor.utils.io.*
 import java.net.*
 
@@ -34,9 +33,4 @@ public actual class SocketTimeoutException actual constructor(
  */
 @OptIn(InternalAPI::class)
 @Suppress("DEPRECATION")
-internal actual fun ByteChannelWithMappedExceptions(request: HttpRequestData): ByteChannel = ByteChannel { cause ->
-    when (cause?.rootCause) {
-        is java.net.SocketTimeoutException -> SocketTimeoutException(request, cause)
-        else -> cause
-    }
-}
+internal actual fun ByteChannelWithMappedExceptions(request: HttpRequestData): ByteChannel = ByteChannel()

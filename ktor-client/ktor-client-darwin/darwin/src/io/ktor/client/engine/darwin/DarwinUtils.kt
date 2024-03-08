@@ -54,7 +54,7 @@ internal suspend fun OutgoingContent.toDataOrStream(): Any? {
                 val buffer = allocArray<ByteVar>(4096)
                 while (!channel.isClosedForRead) {
                     var offset = 0
-                    val read = channel.readAvailable(buffer, 0, 4096)
+                    val read: Int = TODO("channel.readAvailable(buffer, 0, 4096)")
                     while (offset < read) {
                         while (!outputStream.hasSpaceAvailable) {
                             yield()

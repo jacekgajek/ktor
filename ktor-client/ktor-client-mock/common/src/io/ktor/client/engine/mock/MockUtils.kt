@@ -7,7 +7,6 @@ package io.ktor.client.engine.mock
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.content.*
-import io.ktor.util.*
 import io.ktor.util.date.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
@@ -24,7 +23,7 @@ public suspend fun OutgoingContent.toByteArray(): ByteArray = when (this) {
         val channel = ByteChannel()
         GlobalScope.launch(Dispatchers.Unconfined) {
             writeTo(channel)
-            channel.close()
+            channel.flushAndClose()
         }
         channel.toByteArray()
     }
@@ -40,12 +39,12 @@ public suspend fun OutgoingContent.toByteReadPacket(): ByteReadPacket = when (th
         val channel = ByteChannel()
         GlobalScope.launch(Dispatchers.Unconfined) {
             writeTo(channel)
-            channel.close()
+            channel.flushAndClose()
         }
         channel.readRemaining()
     }
 
-    else -> ByteReadPacket.Empty
+    else -> ByteReadPacketEmpty
 }
 
 /**

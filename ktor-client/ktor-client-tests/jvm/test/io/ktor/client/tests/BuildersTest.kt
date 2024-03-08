@@ -11,7 +11,7 @@ import io.ktor.client.statement.*
 import io.ktor.client.tests.utils.*
 import kotlin.test.*
 
-class BuildersTest : ClientLoader() {
+class BuildersTest : ClientLoader(5) {
 
     @Test
     fun getEmptyResponseTest() = clientTests {

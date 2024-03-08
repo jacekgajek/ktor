@@ -21,11 +21,13 @@ import io.ktor.util.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.debug.junit5.*
 import java.util.concurrent.*
 import kotlin.coroutines.*
 import kotlin.test.*
 
 @Suppress("KDocMissingDocumentation")
+@CoroutinesTimeout(1000)
 abstract class HttpClientTest(private val factory: HttpClientEngineFactory<*>) : TestWithKtor() {
     override val server: EmbeddedServer<*, *> = embeddedServer(CIO, serverPort) {
         routing {

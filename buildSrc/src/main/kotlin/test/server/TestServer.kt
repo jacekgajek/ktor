@@ -8,6 +8,7 @@ import io.ktor.network.tls.certificates.*
 import io.ktor.server.cio.*
 import io.ktor.server.engine.*
 import io.ktor.server.jetty.*
+import io.ktor.server.netty.*
 import test.server.tests.*
 import java.io.*
 import java.util.concurrent.*
@@ -24,7 +25,7 @@ internal fun startServer(): Closeable {
         val tcpServer = TestTcpServer(HTTP_PROXY_PORT, ::tcpServerHandler)
         scope.use(tcpServer)
 
-        val server = embeddedServer(CIO, DEFAULT_PORT) {
+        val server = embeddedServer(Netty, DEFAULT_PORT) {
             tests()
         }.start()
 
@@ -40,6 +41,11 @@ internal fun startServer(): Closeable {
     }
 
     return scope
+}
+
+fun main() {
+    startServer()
+    while(true) { }
 }
 
 private fun setupTLSServer(): EmbeddedServer<*, *> {

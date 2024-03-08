@@ -11,6 +11,7 @@ import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
+import kotlinx.io.*
 import java.security.*
 import java.security.cert.*
 import java.security.cert.Certificate
@@ -91,6 +92,8 @@ internal class TLSClientHandshake(
             }
         } catch (cause: ClosedReceiveChannelException) {
             channel.close()
+        } catch (cause: EOFException) {
+            channel.close()
         } catch (cause: Throwable) {
             channel.close(cause)
             // Remote server closed connection
@@ -125,7 +128,7 @@ internal class TLSClientHandshake(
                 )
             )
 
-            rawOutput.close()
+            rawOutput.flushAndClose()
         }
     }
 
@@ -134,13 +137,13 @@ internal class TLSClientHandshake(
         while (true) {
             val record = input.receive()
             if (record.type != TLSRecordType.Handshake) {
-                record.packet.release()
+                record.packet.close()
                 error("TLS handshake expected, got ${record.type}")
             }
 
             val packet = record.packet
 
-            while (packet.isNotEmpty) {
+            while (!packet.exhausted()) {
                 val handshake = packet.readTLSHandshake()
                 if (handshake.type == TLSHandshakeType.HelloRequest) continue
                 if (handshake.type != TLSHandshakeType.Finished) {
@@ -150,7 +153,7 @@ internal class TLSClientHandshake(
                 channel.send(handshake)
 
                 if (handshake.type == TLSHandshakeType.Finished) {
-                    packet.release()
+                    packet.close()
                     return@produce
                 }
             }
@@ -282,7 +285,7 @@ internal class TLSClientHandshake(
                         }
 
                         RSA -> {
-                            packet.release()
+                            packet.close()
                             error("Server key exchange handshake doesn't expected in RCA exchange type")
                         }
                     }
@@ -427,7 +430,7 @@ internal class TLSClientHandshake(
         try {
             output.send(TLSRecord(TLSRecordType.ChangeCipherSpec, packet = packet))
         } catch (cause: Throwable) {
-            packet.release()
+            packet.close()
             throw cause
         }
     }
@@ -477,7 +480,7 @@ internal class TLSClientHandshake(
         try {
             output.send(element)
         } catch (cause: Throwable) {
-            element.packet.release()
+            element.packet.close()
             throw cause
         }
     }

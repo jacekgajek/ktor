@@ -320,7 +320,6 @@ internal class NettyHttpResponsePipeline(
         var unflushedBytes = 0
         var lastFuture: ChannelFuture = requestMessageFuture
 
-        @Suppress("DEPRECATION")
         channel.lookAheadSuspend {
             while (true) {
                 val buffer = request(0, 1)

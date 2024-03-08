@@ -77,7 +77,7 @@ internal class ApacheResponseConsumer(
     parentContext: CoroutineContext,
     private val requestData: HttpRequestData
 ) : AsyncEntityConsumer<Unit>, CoroutineScope {
-
+    private val MAX_CHANNEL_CAPACITY = 4096
     private val consumerJob = Job(parentContext[Job])
     override val coroutineContext: CoroutineContext = parentContext + consumerJob
 
@@ -92,7 +92,7 @@ internal class ApacheResponseConsumer(
     private val messagesQueue = Channel<Any>(capacity = UNLIMITED)
 
     internal val responseChannel: ByteReadChannel = channel
-    private val capacity = atomic(channel.availableForWrite)
+    private val capacity = atomic(MAX_CHANNEL_CAPACITY)
 
     init {
         coroutineContext[Job]?.invokeOnCompletion(onCancelling = true) { cause ->
@@ -152,8 +152,8 @@ internal class ApacheResponseConsumer(
         responseChannel.cancel(mappedCause)
     }
 
-    internal fun close() {
-        channel.close()
+    internal fun close() = runBlocking {
+        channel.flushAndClose()
         consumerJob.complete()
     }
 

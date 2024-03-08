@@ -26,7 +26,7 @@ internal fun CoroutineScope.attachForWritingImpl(
     var total = 0
     while (!sockedClosed && !source.isClosedForRead) {
         val count = source.read { memory, start, stop ->
-            val bufferStart = memory.pointer + start
+            val bufferStart = TODO("memory.pointer + start")
             val remaining = stop - start
             val bytesWritten = if (remaining > 0) {
                 send(descriptor, bufferStart, remaining.convert(), 0).toInt()

@@ -8,16 +8,18 @@ import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.debug.junit5.*
 import kotlin.test.*
 
+@CoroutinesTimeout(5000)
 class WebSocketReaderTest {
     private suspend fun writeFrame(channel: ByteWriteChannel, frame: Frame) {
         val serializer = Serializer()
         serializer.enqueue(frame)
 
         while (serializer.hasOutstandingBytes) {
-            channel.write {
-                serializer.serialize(it)
+            channel.write { buffer ->
+                serializer.serialize(buffer)
             }
         }
     }

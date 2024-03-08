@@ -572,17 +572,22 @@ abstract class HttpServerCommonTestSuite<TEngine : ApplicationEngine, TConfigura
         createAndStartServer {
             route("/timed") {
                 post {
-                    val byteStream = ByteChannel(autoFlush = true)
+                    val byteStream: ByteWriteChannel = ByteChannel(autoFlush = true)
                     launch(Dispatchers.Unconfined) {
-                        byteStream.writePacket(call.receiveChannel().readRemaining())
-                        byteStream.close(null)
+                        val channel = call.receiveChannel()
+                        val packet = channel.readRemaining()
+                        println("packet ${packet.remaining}")
+                        assertEquals(5, packet.remaining)
+                        println("channel $channel")
+                        byteStream.writePacket(packet)
+                        byteStream.flushAndClose()
                     }
                     call.respond(object : OutgoingContent.ReadChannelContent() {
                         override val status: HttpStatusCode = HttpStatusCode.OK
                         override val contentType: ContentType = ContentType.Text.Plain
                         override val headers: Headers = Headers.Empty
                         override val contentLength: Long = 5
-                        override fun readFrom() = byteStream
+                        override fun readFrom() = byteStream as ByteReadChannel
                     })
                 }
             }
@@ -611,7 +616,7 @@ abstract class HttpServerCommonTestSuite<TEngine : ApplicationEngine, TConfigura
         }
     }
 
-    @OptIn(InternalAPI::class)
+    @OptIn(InternalAPI::class, ExperimentalStdlibApi::class)
     @Test
     open fun testCanModifyRequestHeaders() {
         createAndStartServer {
@@ -650,7 +655,7 @@ abstract class HttpServerCommonTestSuite<TEngine : ApplicationEngine, TConfigura
         }
     }
 
-    @OptIn(InternalAPI::class, DelicateCoroutinesApi::class)
+    @OptIn(InternalAPI::class, DelicateCoroutinesApi::class, ExperimentalStdlibApi::class)
     @Test
     open fun testCanModifyRequestBody() {
         createAndStartServer {
@@ -678,7 +683,7 @@ abstract class HttpServerCommonTestSuite<TEngine : ApplicationEngine, TConfigura
             HttpClient().use { client ->
                 val requestBody = ByteChannel(true)
                 requestBody.writeStringUtf8("test")
-                requestBody.close()
+                requestBody.flushAndClose()
 
                 val response = client.post("http://127.0.0.1:$port/") {
                     setBody(requestBody)
@@ -778,6 +783,7 @@ abstract class HttpServerCommonTestSuite<TEngine : ApplicationEngine, TConfigura
                         override suspend fun writeTo(channel: ByteWriteChannel) {
                             channel.writeStringUtf8("first\n")
                             channel.writeStringUtf8("second\n")
+                            println("throw error")
                             throw ExpectedTestException("error")
                         }
                     }
@@ -787,7 +793,9 @@ abstract class HttpServerCommonTestSuite<TEngine : ApplicationEngine, TConfigura
 
         try {
             withUrl("/") {
+                println("response $this")
                 body<ByteArray>()
+                println("received")
             }
         } catch (cause: Throwable) {
             // expected

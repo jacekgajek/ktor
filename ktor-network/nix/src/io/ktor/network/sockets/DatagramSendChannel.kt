@@ -6,9 +6,9 @@ package io.ktor.network.sockets
 
 import io.ktor.network.selector.*
 import io.ktor.network.util.*
+import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.errors.*
-import io.ktor.utils.io.pool.*
 import kotlinx.atomicfu.*
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*
@@ -62,30 +62,27 @@ internal class DatagramSendChannel(
         var result = false
 
         try {
-            DefaultDatagramChunkBufferPool.useInstance { buffer ->
-                element.packet.copy().readAvailable(buffer)
+            val bytes = element.packet.copy().readBytes()
+            val bytesWritten = sento(element, bytes)
 
-                val bytes = element.packet.copy().readBytes()
-                val bytesWritten = sento(element, bytes)
-
-                result = when (bytesWritten) {
-                    0 -> throw IOException("Failed writing to closed socket")
-                    -1 -> {
-                        if (errno == EAGAIN) {
-                            false
-                        } else {
-                            throw PosixException.forErrno()
-                        }
+            result = when (bytesWritten) {
+                0 -> throw IOException("Failed writing to closed socket")
+                -1 -> {
+                    if (errno == EAGAIN) {
+                        false
+                    } else {
+                        throw PosixException.forErrno()
                     }
-                    else -> true
                 }
+
+                else -> true
             }
         } finally {
             lock.unlock()
         }
 
         if (result) {
-            element.packet.release()
+            element.packet.close()
         }
 
         return ChannelResult.success(Unit)

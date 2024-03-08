@@ -10,6 +10,7 @@ package io.ktor.util
 import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
+import kotlinx.io.*
 
 private val digits = "0123456789abcdef".toCharArray()
 
@@ -55,8 +56,9 @@ public expect fun generateNonce(): String
 /**
  * Generates a nonce bytes of [size]. Could block if the system's entropy source is empty
  */
+@OptIn(InternalIoApi::class)
 public fun generateNonce(size: Int): ByteArray = buildPacket {
-    while (this.size < size) {
+    while (buffer.size < size) {
         writeText(generateNonce())
     }
 }.readBytes(size)

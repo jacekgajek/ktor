@@ -22,8 +22,8 @@ internal fun CoroutineScope.attachForReadingImpl(
     try {
         while (!channel.isClosedForWrite) {
             var close = false
-            val count = channel.write { memory, startIndex, endIndex ->
-                val bufferStart = memory.pointer + startIndex
+            val count: Int = channel.write { memory, startIndex, endIndex ->
+                val bufferStart = TODO("memory.pointer + startIndex")
                 val size = endIndex - startIndex
                 val bytesRead = recv(descriptor, bufferStart, size.convert(), 0).toInt()
 
@@ -40,7 +40,7 @@ internal fun CoroutineScope.attachForReadingImpl(
 
             channel.flush()
             if (close) {
-                channel.close()
+                channel.flushAndClose()
                 break
             }
 
@@ -59,6 +59,6 @@ internal fun CoroutineScope.attachForReadingImpl(
         throw cause
     } finally {
         shutdown(descriptor, SHUT_RD)
-        channel.close()
+        channel.flushAndClose()
     }
 }

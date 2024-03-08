@@ -22,6 +22,7 @@ internal val CLIENT_CONFIG = AttributeKey<HttpClientConfig<*>>("client-config")
 /**
  * Serves as the base interface for an [HttpClient]'s engine.
  */
+@OptIn(ExperimentalStdlibApi::class)
 public interface HttpClientEngine : CoroutineScope, Closeable {
     /**
      * Specifies [CoroutineDispatcher] for I/O operations.

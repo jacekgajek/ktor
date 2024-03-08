@@ -119,7 +119,7 @@ internal suspend fun ByteReadChannel.readText(
             content.readTextWithCustomCharset(charset)
         }
     } finally {
-        content.release()
+        content.close()
     }
 }
 

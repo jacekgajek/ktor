@@ -42,7 +42,7 @@ public class ClientEngineClosedException(override val cause: Throwable? = null) 
 /**
  * Closes [CoroutineDispatcher] if it's [CloseableCoroutineDispatcher] or [Closeable].
  */
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, ExperimentalStdlibApi::class)
 private fun CoroutineDispatcher.close() {
     try {
         when (this) {

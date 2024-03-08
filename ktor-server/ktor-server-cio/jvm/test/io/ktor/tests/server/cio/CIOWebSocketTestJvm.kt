@@ -23,21 +23,23 @@ class CIOWebSocketTestJvm : EngineTestBase<CIOApplicationEngine, CIOApplicationE
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun testNonWebsocketRouteDoNotLeakOnWsRequest() = runTest {
+        fail()
         createAndStartServer {}
         DebugProbes.install()
         runBlocking {
             HttpClient(io.ktor.client.engine.cio.CIO) {
                 install(WebSockets)
             }.use { httpClient ->
-                val requests = (1..200).map { id ->
+//                val requests = (1..200).map { id ->
                     launch {
-                        assertFails { httpClient.webSocket("ws://127.0.0.1:$port/$id") {} }
-                    }
-                }
-                requests.joinAll()
+                        assertFails { httpClient.webSocket("ws://127.0.0.1:$port/1") {} }
+                    }.join()
+//                }
+//                requests.joinAll()
             }
         }
+        DebugProbes.dumpCoroutines()
         val coroutinesCount = DebugProbes.dumpCoroutinesInfo().size
-        assertTrue(10 > coroutinesCount)
+        assertEquals(0, coroutinesCount)
     }
 }

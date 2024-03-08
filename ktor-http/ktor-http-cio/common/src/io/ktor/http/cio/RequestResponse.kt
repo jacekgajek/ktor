@@ -12,6 +12,7 @@ import io.ktor.utils.io.core.*
  * Represents a base HTTP message type for request and response
  * @property headers request/response headers
  */
+@OptIn(ExperimentalStdlibApi::class)
 public abstract class HttpMessage internal constructor(
     public val headers: HttpHeadersMap,
     private val builder: CharArrayBuilder

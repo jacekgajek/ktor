@@ -71,7 +71,7 @@ public fun HttpClient(
  * [Creating and configuring a client](https://ktor.io/docs/create-client.html).
  * @property engine [HttpClientEngine] used to execute network requests.
  */
-@OptIn(InternalAPI::class)
+@OptIn(InternalAPI::class, ExperimentalStdlibApi::class)
 public class HttpClient(
     public val engine: HttpClientEngine,
     private val userConfig: HttpClientConfig<out HttpClientEngineConfig> = HttpClientConfig()

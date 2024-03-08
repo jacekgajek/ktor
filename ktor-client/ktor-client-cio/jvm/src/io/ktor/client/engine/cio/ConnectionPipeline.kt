@@ -12,13 +12,13 @@ import io.ktor.network.sockets.*
 import io.ktor.util.cio.*
 import io.ktor.util.date.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
 import io.ktor.utils.io.pool.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.sync.*
+import kotlinx.io.*
 import java.nio.channels.*
 import kotlin.coroutines.*
 
@@ -138,7 +138,7 @@ internal actual class ConnectionPipeline actual constructor(
                 if (shouldClose) break
             }
         } finally {
-            networkOutput.close()
+            networkOutput.flushAndClose()
             connection.socket.close()
         }
     }
@@ -174,6 +174,6 @@ private fun CoroutineScope.skipCancels(
         output.close(cause)
         throw cause
     } finally {
-        output.close()
+        output.flushAndClose()
     }
 }

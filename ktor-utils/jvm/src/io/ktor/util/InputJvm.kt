@@ -23,8 +23,6 @@ public fun Input.asStream(): InputStream = object : InputStream() {
         return readAvailable(buffer, offset, length)
     }
 
-    override fun skip(count: Long): Long = discard(count)
-
     override fun close() {
         this@asStream.close()
     }

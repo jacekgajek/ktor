@@ -222,6 +222,7 @@ public fun <A : Pipeline<*, PipelineCall>, B : Any, F : Any> A.uninstall(
 /**
  * Uninstalls a plugin specified by [key] from the pipeline.
  */
+@OptIn(ExperimentalStdlibApi::class)
 @Deprecated(
     "This method is misleading and will be removed. " +
         "If you have use case that requires this functionaдity, please add it in KTOR-2696",

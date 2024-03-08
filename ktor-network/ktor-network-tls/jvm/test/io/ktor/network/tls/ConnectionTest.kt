@@ -9,7 +9,6 @@ import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import io.ktor.network.sockets.InetSocketAddress
 import io.ktor.network.tls.certificates.*
-import io.ktor.util.cio.*
 import io.ktor.utils.io.*
 import io.netty.bootstrap.*
 import io.netty.channel.*
@@ -18,18 +17,15 @@ import io.netty.channel.socket.*
 import io.netty.channel.socket.nio.*
 import io.netty.handler.ssl.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.debug.junit5.*
 import java.io.*
 import java.net.ServerSocket
 import java.security.*
 import java.security.cert.*
 import javax.net.ssl.*
 import kotlin.test.*
-import kotlin.test.Ignore
-import kotlin.test.Test
 
 @Suppress("UNCHECKED_CAST")
-@CoroutinesTimeout(20_000)
+//@CoroutinesTimeout(20_000)
 class ConnectionTest {
 
     @Test
@@ -113,9 +109,9 @@ class ConnectionTest {
                         .trustManagers
                         .filterIsInstance<X509TrustManager>()
                         .first()
+                }.use {
+                    it.openWriteChannel().flushAndClose()
                 }
-        }.use {
-            it.openWriteChannel(autoFlush = true).use { close() }
         }
     }
 

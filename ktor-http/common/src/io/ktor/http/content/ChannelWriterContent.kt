@@ -19,5 +19,6 @@ public class ChannelWriterContent(
 ) : OutgoingContent.WriteChannelContent() {
     override suspend fun writeTo(channel: ByteWriteChannel) {
         body(channel)
+        channel.flush()
     }
 }

@@ -13,7 +13,7 @@ import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlin.test.*
 
-class HttpStatementTest : ClientLoader() {
+class HttpStatementTest : ClientLoader(1) {
 
     @Test
     @Ignore

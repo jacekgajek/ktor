@@ -57,7 +57,7 @@ fun main() {
                     output.writePacket(notFound404_11.copy())
                 }
 
-                output.close()
+                output.flushAndClose()
             } finally {
                 request.release()
             }

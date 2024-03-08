@@ -8,11 +8,15 @@ import io.ktor.client.call.*
 import io.ktor.client.engine.*
 import io.ktor.client.request.*
 import io.ktor.client.tests.utils.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.debug.*
+import kotlinx.coroutines.debug.junit5.*
 import java.net.*
 import kotlin.test.*
 
 private const val HTTP_PROXY_PORT = 8082
 
+//@CoroutinesTimeout(5000)
 class AndroidProxyTest {
     private val factory: HttpClientEngineFactory<*> = Android
 

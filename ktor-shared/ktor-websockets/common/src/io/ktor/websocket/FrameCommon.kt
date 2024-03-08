@@ -4,7 +4,6 @@
 
 package io.ktor.websocket
 
-import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 
@@ -139,7 +138,7 @@ public expect sealed class Frame private constructor(
  */
 public fun Frame.Text.readText(): String {
     require(fin) { "Text could be only extracted from non-fragmented frame" }
-    return Charsets.UTF_8.newDecoder().decode(buildPacket { writeFully(data) })
+    return data.decodeToString()
 }
 
 /**

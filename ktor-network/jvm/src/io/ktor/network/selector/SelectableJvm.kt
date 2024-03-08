@@ -1,6 +1,7 @@
 // ktlint-disable filename
 package io.ktor.network.selector
 
+import io.ktor.utils.io.errors.*
 import kotlinx.atomicfu.*
 import java.nio.channels.*
 import java.util.concurrent.atomic.AtomicBoolean
@@ -28,12 +29,23 @@ internal open class SelectableBase(override val channel: SelectableChannel) : Se
         }
     }
 
+    override fun cancel(cause: Throwable) {
+        if (!_isClosed.compareAndSet(false, true)) return
+
+        _interestedOps.value = 0
+        val exception = IOException("Selectable is cancelled", cause)
+        suspensions.invokeForEachPresent {
+            resumeWithException(exception)
+        }
+    }
+
     override fun close() {
         if (!_isClosed.compareAndSet(false, true)) return
 
         _interestedOps.value = 0
+        val exception = IOException("Selectable is closed")
         suspensions.invokeForEachPresent {
-            resumeWithException(ClosedChannelCancellationException())
+            resumeWithException(exception)
         }
     }
 

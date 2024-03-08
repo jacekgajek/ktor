@@ -77,8 +77,6 @@ public fun String.encodeURLPath(
     encodeSlash: Boolean = false,
     encodeEncoded: Boolean = true,
 ): String = buildString {
-    val charset = Charsets.UTF_8
-
     var index = 0
     while (index < this@encodeURLPath.length) {
         val current = this@encodeURLPath[index]
@@ -103,7 +101,7 @@ public fun String.encodeURLPath(
 
         val symbolSize = if (current.isSurrogate()) 2 else 1
         // we need to call newEncoder() for every symbol, otherwise it won't work
-        charset.newEncoder().encode(this@encodeURLPath, index, index + symbolSize).forEach {
+        this@encodeURLPath.encodeToByteArray(index, index + symbolSize).forEach {
             append(it.percentEncode())
         }
         index += symbolSize
@@ -122,7 +120,7 @@ public fun String.encodeOAuth(): String = encodeURLParameter()
 public fun String.encodeURLParameter(
     spaceToPlus: Boolean = false
 ): String = buildString {
-    val content = Charsets.UTF_8.newEncoder().encode(this@encodeURLParameter)
+    val content = this@encodeURLParameter.encodeToByteArray()
     content.forEach {
         when {
             it in URL_ALPHABET || it in SPECIAL_SYMBOLS -> append(it.toInt().toChar())

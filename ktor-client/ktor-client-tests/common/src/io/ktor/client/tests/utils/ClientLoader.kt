@@ -8,7 +8,7 @@ import io.ktor.client.engine.*
 import kotlinx.coroutines.test.*
 
 /**
- * Helper interface to test client.
+ * Helper interface to a test client.
  */
 expect abstract class ClientLoader(timeoutSeconds: Int = 60) {
     /**

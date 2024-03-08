@@ -4,15 +4,14 @@
 
 package io.ktor.util.pipeline
 
-import io.ktor.utils.io.*
-
 internal actual fun Throwable.withCause(cause: Throwable?): Throwable {
     if (cause == null || this.cause == cause) {
         return this
     }
 
-    val result = tryCopyException(this, cause) ?: return this
-    result.stackTrace = stackTrace
+    val result = TODO()
+//    val result = tryCopyException(this, cause) ?: return this
+//    result.stackTrace = stackTrace
 
     return result
 }

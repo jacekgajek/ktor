@@ -68,14 +68,6 @@ internal class DatagramSocketNative(
         sender.close()
     }
 
-    @Suppress("DEPRECATION")
-    override fun attachForReading(channel: ByteChannel): WriterJob =
-        attachForReadingImpl(channel, descriptor, selectable, selector)
-
-    @Suppress("DEPRECATION")
-    override fun attachForWriting(channel: ByteChannel): ReaderJob =
-        attachForWritingImpl(channel, descriptor, selectable, selector)
-
     private suspend fun readDatagram(): Datagram {
         while (true) {
             val datagram = tryReadDatagram()
@@ -90,39 +82,44 @@ internal class DatagramSocketNative(
         val clientAddressLength: UIntVarOf<UInt> = alloc()
         clientAddressLength.value = sizeOf<sockaddr_storage>().convert()
 
-        val buffer = DefaultDatagramChunkBufferPool.borrow()
-        try {
-            val count = buffer.write { memory, startIndex, endIndex ->
-                val bufferStart = memory.pointer + startIndex
-                val size = endIndex - startIndex
-                val bytesRead = recvfrom(
-                    descriptor,
-                    bufferStart,
-                    size.convert(),
-                    0,
-                    clientAddress.ptr.reinterpret(),
-                    clientAddressLength.ptr
-                ).toInt()
+//        try {
+            val packet: ByteReadPacket = TODO()
+//            val count = buffer.write { memory, startIndex, endIndex ->
+//                val bufferStart = memory.pointer + startIndex
+//                val size = endIndex - startIndex
+//                val bytesRead = recvfrom(
+//                    descriptor,
+//                    bufferStart,
+//                    size.convert(),
+//                    0,
+//                    clientAddress.ptr.reinterpret(),
+//                    clientAddressLength.ptr
+//                ).toInt()
 
-                when (bytesRead) {
-                    0 -> throw IOException("Failed reading from closed socket")
-                    -1 -> {
-                        if (errno == EAGAIN) return@write 0
-                        throw PosixException.forErrno()
-                    }
-                    else -> bytesRead
-                }
-            }
+//                when (bytesRead) {
+//                    0 -> throw IOException("Failed reading from closed socket")
+//                    -1 -> {
+//                        if (errno == EAGAIN) return@write 0
+//                        throw PosixException.forErrno()
+//                    }
+//                    else -> bytesRead
+//                }
+//            }
+//            if (count <= 0) return null
 
-            if (count <= 0) return null
             val address = clientAddress.reinterpret<sockaddr>().toNativeSocketAddress()
 
             return Datagram(
-                buildPacket { writeFully(buffer) },
+                packet,
                 address.toSocketAddress()
             )
-        } finally {
-            buffer.release(DefaultDatagramChunkBufferPool)
-        }
+    }
+
+    override fun attachForReading(): ByteReadChannel {
+        TODO("Not yet implemented")
+    }
+
+    override fun attachForWriting(): ByteWriteChannel {
+        TODO("Not yet implemented")
     }
 }

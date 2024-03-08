@@ -598,7 +598,7 @@ class CompressionTest {
                             userContext: CoroutineContext
                         ): Job {
                             return launch {
-                                output.close()
+                                output.flushAndClose()
                             }
                         }
                     }

@@ -22,7 +22,7 @@ class MultiPartFormDataContentTest {
 
         val channel = ByteChannel()
         formData.writeTo(channel)
-        channel.close()
+        channel.flushAndClose()
 
         val actual = channel.readRemaining().readBytes()
 
@@ -236,7 +236,7 @@ class MultiPartFormDataContentTest {
         val channel = ByteChannel()
         val writeJob = launch {
             writeTo(channel)
-            channel.close()
+            channel.flushAndClose()
         }
 
         val result = channel.readRemaining().readBytes()

@@ -41,7 +41,7 @@ private class ServletReader(val input: ServletInputStream, val contentLength: In
             loop(buffer)
 
             events.close()
-            channel.close()
+            channel.flushAndClose()
         } catch (cause: Throwable) {
             onError(cause)
         } finally {
@@ -74,7 +74,7 @@ private class ServletReader(val input: ServletInputStream, val contentLength: In
             if (contentLength < 0) continue
 
             if (bodySize == contentLength) {
-                channel.close()
+                channel.flushAndClose()
                 events.close()
                 break
             }

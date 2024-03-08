@@ -52,8 +52,6 @@ public object JettyUpgradeImpl : ServletUpgrade {
                     )
 
                     upgradeJob.invokeOnCompletion {
-                        inputChannel.cancel()
-                        outputChannel.close()
                         cancel()
                     }
                 }

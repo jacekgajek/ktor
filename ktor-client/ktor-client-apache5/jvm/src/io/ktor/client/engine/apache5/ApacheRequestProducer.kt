@@ -106,7 +106,7 @@ internal class ApacheRequestEntityProducer(
 
     init {
         producerJob.invokeOnCompletion { cause ->
-            channel.cancel(cause)
+            if (cause != null) channel.cancel(cause)
         }
     }
 
@@ -131,7 +131,7 @@ internal class ApacheRequestEntityProducer(
             return
         }
 
-        if (result == -1 && !waitingForContent.getAndSet(true)) {
+        if (result == 0 && !waitingForContent.getAndSet(true)) {
             launch(Dispatchers.Unconfined) {
                 try {
                     this@ApacheRequestEntityProducer.channel.awaitContent()

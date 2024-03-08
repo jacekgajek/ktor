@@ -10,7 +10,7 @@ import io.ktor.utils.io.*
 import io.ktor.utils.io.jvm.javaio.*
 import jakarta.servlet.http.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.CancellationException
+import java.util.concurrent.CancellationException
 import kotlin.coroutines.*
 
 /**
@@ -110,8 +110,6 @@ public class ServletUpgradeHandler : HttpUpgradeHandler, CoroutineScope {
 
             upgradeJob.complete()
             job.invokeOnCompletion {
-                inputChannel.cancel()
-                outputChannel.close()
                 upgradeJob.cancel()
             }
         }

@@ -7,17 +7,19 @@ package io.ktor.tests.http.cio
 import io.ktor.http.cio.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.debug.junit5.*
 import kotlinx.coroutines.test.*
 import java.nio.*
 import kotlin.test.*
 
+@CoroutinesTimeout(1000)
 class TrySkipDelimiterTest {
     private val ch = ByteChannel()
 
     @Test
     fun testSmoke(): Unit = runTest {
         ch.writeFully(byteArrayOf(1, 2, 3))
-        ch.close()
+        ch.flushAndClose()
 
         val delimiter = ByteBuffer.wrap(byteArrayOf(1, 2))
         assertTrue(ch.skipDelimiterOrEof(delimiter))
@@ -28,7 +30,7 @@ class TrySkipDelimiterTest {
     @Test
     fun testSmokeWithOffsetShift(): Unit = runTest {
         ch.writeFully(byteArrayOf(9, 1, 2, 3))
-        ch.close()
+        ch.flushAndClose()
 
         val delimiter = ByteBuffer.wrap(byteArrayOf(1, 2))
         ch.discard(1)
@@ -39,7 +41,7 @@ class TrySkipDelimiterTest {
 
     @Test
     fun testEmpty(): Unit = runTest {
-        ch.close()
+        ch.flushAndClose()
 
         val delimiter = ByteBuffer.wrap(byteArrayOf(1, 2))
         assertFalse(ch.skipDelimiterOrEof(delimiter))
@@ -48,7 +50,7 @@ class TrySkipDelimiterTest {
     @Test
     fun testFull(): Unit = runTest {
         ch.writeFully(byteArrayOf(1, 2))
-        ch.close()
+        ch.flushAndClose()
 
         val delimiter = ByteBuffer.wrap(byteArrayOf(1, 2))
         assertTrue(ch.skipDelimiterOrEof(delimiter))
@@ -58,7 +60,7 @@ class TrySkipDelimiterTest {
     @Test
     fun testIncomplete(): Unit = runTest {
         ch.writeFully(byteArrayOf(1, 2))
-        ch.close()
+        ch.flushAndClose()
 
         val delimiter = ByteBuffer.wrap(byteArrayOf(1, 2, 3))
         assertFails {
@@ -69,7 +71,7 @@ class TrySkipDelimiterTest {
     @Test
     fun testOtherBytes(): Unit = runTest {
         ch.writeFully(byteArrayOf(7, 8))
-        ch.close()
+        ch.flushAndClose()
 
         val delimiter = ByteBuffer.wrap(byteArrayOf(1, 2))
 
@@ -87,7 +89,7 @@ class TrySkipDelimiterTest {
     fun testTimeSplit(): Unit = runTest {
         val writer = launch(CoroutineName("writer"), start = CoroutineStart.LAZY) {
             ch.writeByte(2)
-            ch.close()
+            ch.flushAndClose()
         }
 
         ch.writeByte(1)

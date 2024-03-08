@@ -14,7 +14,10 @@ import platform.winhttp.*
 @OptIn(ExperimentalForeignApi::class)
 internal typealias WinHttpStatusHandler = (statusInfo: LPVOID?, statusInfoLength: DWORD) -> Unit
 
-internal class WinHttpConnect @OptIn(ExperimentalForeignApi::class) constructor(
+@OptIn(ExperimentalStdlibApi::class)
+internal class WinHttpConnect
+@OptIn(ExperimentalForeignApi::class)
+constructor(
     private val hConnect: COpaquePointer
 ) : Closeable {
 

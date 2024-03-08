@@ -4,9 +4,10 @@
 
 package io.ktor.util
 
-import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
-import io.ktor.utils.io.core.internal.*
+import kotlinx.io.*
+import kotlinx.io.Buffer
+import kotlinx.io.unsafe.*
+import java.nio.*
 import java.nio.channels.*
 
 /**
@@ -14,30 +15,31 @@ import java.nio.channels.*
  * Could return `0` if the channel is non-blocking or [buffer] has no free space
  * @return number of bytes read (possibly 0) or -1 if EOF
  */
-@Suppress("DEPRECATION")
-public fun ReadableByteChannel.read(buffer: ChunkBuffer): Int {
-    if (buffer.writeRemaining == 0) return 0
+@OptIn(SnapshotApi::class, UnsafeIoApi::class)
+public fun ReadableByteChannel.read(buffer: Buffer): Int {
     var count = 0
-
-    buffer.writeDirect(1) { bb ->
-        count = read(bb)
+    var done = false
+    var eof = false
+    while (!done) {
+        UnsafeBufferAccessors.writeToTail(buffer, 1) { array, start, endExclusive ->
+            val buffer = ByteBuffer.wrap(array, start, endExclusive - start)
+            when (val rc = read(buffer)) {
+                -1 -> {
+                    eof = true
+                    done = true
+                    0
+                }
+                0 -> {
+                    done = true
+                    0
+                }
+                else -> {
+                    count += rc
+                    rc
+                }
+            }
+        }
     }
 
-    return count
-}
-
-/**
- * Write bytes to a NIO channel from the specified [buffer]
- * Could return `0` if the channel is non-blocking or [buffer] has no free space
- * @return number of bytes written (possibly 0)
- */
-@InternalAPI
-@Suppress("DEPRECATION")
-public fun WritableByteChannel.write(buffer: ChunkBuffer): Int {
-    var count = 0
-    buffer.readDirect { bb ->
-        count = write(bb)
-    }
-
-    return count
+    return if (count == 0 && eof) -1 else count
 }

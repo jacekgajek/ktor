@@ -16,7 +16,6 @@ import java.util.concurrent.CancellationException
 import kotlin.concurrent.*
 import kotlin.coroutines.*
 import kotlin.test.*
-import kotlin.test.Test
 
 @CoroutinesTimeout(15_000)
 class ServerSocketTest : CoroutineScope {
@@ -86,8 +85,9 @@ class ServerSocketTest : CoroutineScope {
     @Test
     fun testWrite() {
         val server = server { client ->
-            val channel = client.openWriteChannel(true)
+            val channel = client.openWriteChannel()
             channel.writeStringUtf8("123")
+            channel.flushAndClose()
         }
 
         client { socket ->

@@ -6,7 +6,6 @@ package io.ktor.client.network.sockets
 
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
-import io.ktor.util.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.*
@@ -27,22 +26,7 @@ public expect class SocketTimeoutException(message: String, cause: Throwable? = 
  */
 @InternalAPI
 public fun CoroutineScope.mapEngineExceptions(input: ByteReadChannel, request: HttpRequestData): ByteReadChannel {
-    if (PlatformUtils.IS_NATIVE) {
-        return input
-    }
-
-    val replacementChannel = ByteChannelWithMappedExceptions(request)
-
-    @Suppress("DEPRECATION")
-    writer(channel = replacementChannel) {
-        try {
-            input.copyAndClose(replacementChannel)
-        } catch (cause: Throwable) {
-            input.cancel(cause)
-        }
-    }
-
-    return replacementChannel
+    return input
 }
 
 /**
@@ -51,22 +35,7 @@ public fun CoroutineScope.mapEngineExceptions(input: ByteReadChannel, request: H
  */
 @InternalAPI
 public fun CoroutineScope.mapEngineExceptions(output: ByteWriteChannel, request: HttpRequestData): ByteWriteChannel {
-    if (PlatformUtils.IS_NATIVE) {
-        return output
-    }
-
-    val replacementChannel = ByteChannelWithMappedExceptions(request)
-
-    @Suppress("DEPRECATION")
-    writer(channel = replacementChannel) {
-        try {
-            replacementChannel.copyAndClose(output)
-        } catch (cause: Throwable) {
-            replacementChannel.close(cause)
-        }
-    }
-
-    return replacementChannel
+    return output
 }
 
 /**

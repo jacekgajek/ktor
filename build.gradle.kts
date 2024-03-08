@@ -3,7 +3,6 @@
  */
 
 import org.jetbrains.dokka.gradle.*
-import org.jetbrains.kotlin.buildtools.api.*
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.targets.js.*
 import org.jetbrains.kotlin.gradle.targets.jvm.tasks.*
@@ -119,6 +118,7 @@ allprojects {
         mavenCentral()
         maven(url = "https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven")
         maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
+        maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlinx/dev")
     }
 
     val nonDefaultProjectStructure: List<String> by rootProject.extra

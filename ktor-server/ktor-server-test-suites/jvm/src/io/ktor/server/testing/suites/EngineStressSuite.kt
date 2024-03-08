@@ -15,6 +15,7 @@ import io.ktor.server.test.base.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.streams.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.debug.junit5.*
 import org.junit.jupiter.api.extension.*
 import java.net.*
 import java.nio.*
@@ -26,6 +27,7 @@ import kotlin.test.*
 import kotlin.time.*
 import kotlin.time.Duration.Companion.seconds
 
+@CoroutinesTimeout(60 * 1000)
 @ExtendWith(StressTestCondition::class)
 abstract class EngineStressSuite<TEngine : ApplicationEngine, TConfiguration : ApplicationEngine.Configuration>(
     hostFactory: ApplicationEngineFactory<TEngine, TConfiguration>
@@ -224,7 +226,7 @@ abstract class EngineStressSuite<TEngine : ApplicationEngine, TConfiguration : A
                                     output.flush()
                                     delay(200)
                                 } finally {
-                                    output.close()
+                                    output.flushAndClose()
                                 }
                             }
                         }
@@ -310,7 +312,7 @@ abstract class EngineStressSuite<TEngine : ApplicationEngine, TConfiguration : A
                                 }
                             }
 
-                            channel.close()
+                            channel.flushAndClose()
                         }
                     }
                 )
@@ -336,3 +338,4 @@ abstract class EngineStressSuite<TEngine : ApplicationEngine, TConfiguration : A
         Thread.sleep(10000)
     }
 }
+

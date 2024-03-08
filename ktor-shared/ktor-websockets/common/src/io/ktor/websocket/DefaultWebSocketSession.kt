@@ -219,7 +219,7 @@ internal class DefaultWebSocketSessionImpl(
             filtered.close(cause)
         } finally {
             ponger.close()
-            frameBody?.release()
+            frameBody?.close()
             filtered.close()
 
             if (!closeFramePresented) {
@@ -324,7 +324,7 @@ internal class DefaultWebSocketSessionImpl(
     ) {
         val size = frame.data.size + (packet?.size ?: 0)
         if (size > maxFrameSize) {
-            packet?.release()
+            packet?.close()
             close(CloseReason(CloseReason.Codes.TOO_BIG, "Frame is too big: $size. Max size is $maxFrameSize"))
             throw FrameTooBigException(size.toLong())
         }

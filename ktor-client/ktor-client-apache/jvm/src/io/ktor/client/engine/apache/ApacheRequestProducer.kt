@@ -59,7 +59,7 @@ internal class ApacheRequestProducer(
 
     init {
         producerJob.invokeOnCompletion { cause ->
-            channel.cancel(cause)
+            if (cause != null) channel.cancel(cause)
         }
     }
 
@@ -98,7 +98,7 @@ internal class ApacheRequestProducer(
             return
         }
 
-        if (result == -1) {
+        if (result == 0) {
             interestController.suspendOutput(ioctrl)
             launch(Dispatchers.Unconfined) {
                 try {

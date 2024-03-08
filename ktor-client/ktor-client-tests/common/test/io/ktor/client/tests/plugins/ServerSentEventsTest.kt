@@ -17,6 +17,7 @@ import io.ktor.http.content.*
 import io.ktor.sse.*
 import io.ktor.test.dispatcher.*
 import io.ktor.utils.io.*
+import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlin.coroutines.*
@@ -363,7 +364,7 @@ class ServerSentEventsTest : ClientLoader(timeoutSeconds = 120) {
                 engineContext: CoroutineContext,
                 userContext: CoroutineContext
             ): Job {
-                output.close()
+                output.cancel(IOException("Channel was cancelled"))
                 return Job()
             }
         }

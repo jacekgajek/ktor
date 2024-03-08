@@ -19,7 +19,6 @@ import kotlinx.coroutines.*
 import kotlinx.serialization.*
 import kotlin.test.*
 
-@Suppress("DEPRECATION")
 @OptIn(DelicateCoroutinesApi::class)
 class LoggingTest : ClientLoader() {
     private val content = "Response data"
@@ -414,7 +413,7 @@ class LoggingTest : ClientLoader() {
             val body = ByteChannel()
             GlobalScope.launch {
                 body.writeFully(ByteArray(16 * 1024) { 1 })
-                body.close()
+                body.flushAndClose()
             }
 
             val response = client.prepareRequest {

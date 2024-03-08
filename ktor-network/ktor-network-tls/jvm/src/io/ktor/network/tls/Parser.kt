@@ -7,7 +7,6 @@ package io.ktor.network.tls
 import io.ktor.network.tls.extensions.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
-import java.io.*
 import java.math.*
 import java.security.cert.*
 import java.security.spec.*

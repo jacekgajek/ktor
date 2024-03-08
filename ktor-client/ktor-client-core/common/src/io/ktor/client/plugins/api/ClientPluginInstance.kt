@@ -12,6 +12,7 @@ import io.ktor.utils.io.core.*
 /**
  * An instance of [ClientPlugin] that can be installed into [HttpClient].
  */
+@OptIn(ExperimentalStdlibApi::class)
 public class ClientPluginInstance<PluginConfig : Any> internal constructor(
     internal val config: PluginConfig,
     internal val name: String,

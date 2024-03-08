@@ -13,7 +13,7 @@ import kotlinx.atomicfu.*
 import kotlinx.cinterop.*
 import platform.winhttp.*
 
-@OptIn(ExperimentalForeignApi::class)
+@OptIn(ExperimentalForeignApi::class, ExperimentalStdlibApi::class)
 internal class WinHttpSession(private val config: WinHttpClientEngineConfig) : Closeable {
 
     @OptIn(ExperimentalForeignApi::class)

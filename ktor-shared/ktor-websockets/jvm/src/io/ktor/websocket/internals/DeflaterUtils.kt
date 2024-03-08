@@ -5,6 +5,7 @@
 package io.ktor.websocket.internals
 
 import io.ktor.util.cio.*
+import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.pool.*
 import java.nio.*
@@ -22,13 +23,14 @@ internal fun Deflater.deflateFully(data: ByteArray): ByteArray {
                 deflateTo(this@deflateFully, buffer, false)
             }
 
-            while (deflateTo(this@deflateFully, buffer, true) != 0) {}
+            while (deflateTo(this@deflateFully, buffer, true) != 0) {
+            }
         }
     }
 
     if (deflatedBytes.endsWith(PADDED_EMPTY_CHUNK)) {
         return deflatedBytes.readBytes(deflatedBytes.remaining.toInt() - EMPTY_CHUNK.size).also {
-            deflatedBytes.release()
+            deflatedBytes.close()
         }
     }
 

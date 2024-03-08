@@ -18,7 +18,7 @@ import kotlinx.coroutines.*
 import kotlin.reflect.*
 import kotlin.test.*
 
-class ExceptionsTest : ClientLoader() {
+class ExceptionsTest : ClientLoader(timeoutSeconds = 1) {
 
     @Test
     fun testReadResponseFromException() = testSuspend {

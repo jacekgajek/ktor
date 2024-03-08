@@ -38,10 +38,7 @@ public abstract class SelectorManagerSupport internal constructor() : SelectorMa
         if (selectable.isClosed) selectableIsClosed()
         if (interestedOps and flag == 0) selectableIsInvalid(interestedOps, flag)
 
-        suspendCancellableCoroutine<Unit> { continuation ->
-            continuation.invokeOnCancellation {
-                // TODO: We've got a race here (and exception erasure)!
-            }
+        suspendCancellableCoroutine { continuation ->
             selectable.suspensions.addSuspension(interest, continuation)
 
             if (!continuation.isCancelled) {

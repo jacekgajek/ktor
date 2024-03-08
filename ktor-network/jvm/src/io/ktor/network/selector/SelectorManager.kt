@@ -15,6 +15,7 @@ public actual fun SelectorManager(dispatcher: CoroutineContext): SelectorManager
 /**
  * Selector manager is a service that manages NIO selectors and selection threads
  */
+@OptIn(ExperimentalStdlibApi::class)
 public actual interface SelectorManager : CoroutineScope, Closeable {
     /**
      * NIO selector provider
@@ -44,6 +45,7 @@ public actual interface SelectorManager : CoroutineScope, Closeable {
  * Creates a NIO entity via [create] and calls [setup] on it. If any exception happens then the entity will be closed
  * and an exception will be propagated.
  */
+@OptIn(ExperimentalStdlibApi::class)
 public inline fun <C : Closeable, R> SelectorManager.buildOrClose(
     create: SelectorProvider.() -> C,
     setup: C.() -> R

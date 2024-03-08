@@ -377,7 +377,7 @@ class LoggingMockedTests {
 
             withTimeout(5_000) { // the bug will cause this to timeout
                 content.collect {
-                    channel.close()
+                    channel.flushAndClose()
                 }
             }
         }
