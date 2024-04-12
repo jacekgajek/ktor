@@ -111,6 +111,7 @@ internal class TLSClientHandshake(
                 try {
                     val record = if (useCipher) {
                         val bytes = rawRecord.packet.copy().readByteArray()
+                        println("Raw record ${rawRecord.type.name}")
                         println("Before encryption: ${bytes.joinToString()}")
                         cipher.encrypt(rawRecord)
                     } else {
