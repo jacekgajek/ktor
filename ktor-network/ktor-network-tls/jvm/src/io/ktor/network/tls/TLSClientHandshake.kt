@@ -109,8 +109,16 @@ internal class TLSClientHandshake(
         try {
             for (rawRecord in channel) {
                 try {
-                    val record = if (useCipher) cipher.encrypt(rawRecord) else rawRecord
-                    if (rawRecord.type == TLSRecordType.ChangeCipherSpec) useCipher = true
+                    val record = if (useCipher) {
+                        val bytes = rawRecord.packet.copy().readByteArray()
+                        println("Before encryption: ${bytes.joinToString()}")
+                        cipher.encrypt(rawRecord)
+                    } else {
+                        rawRecord
+                    }
+                    if (rawRecord.type == TLSRecordType.ChangeCipherSpec) {
+                        useCipher = true
+                    }
 
                     rawOutput.writeRecord(record)
                 } catch (cause: Throwable) {
