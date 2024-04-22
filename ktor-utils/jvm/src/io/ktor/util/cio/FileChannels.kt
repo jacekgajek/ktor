@@ -35,7 +35,6 @@ public fun File.readChannel(
         RandomAccessFile(this@readChannel, "r").use { file ->
             val fileChannel: FileChannel = file.channel
             fileChannel.writeToScope(this, start, endInclusive)
-            println("Wrote to scope")
         }
     }.channel
 }

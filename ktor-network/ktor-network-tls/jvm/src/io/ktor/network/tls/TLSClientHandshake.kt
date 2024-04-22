@@ -110,9 +110,6 @@ internal class TLSClientHandshake(
             for (rawRecord in channel) {
                 try {
                     val record = if (useCipher) {
-                        val bytes = rawRecord.packet.copy().readByteArray()
-                        println("Raw record ${rawRecord.type.name}")
-                        println("Before encryption: ${bytes.joinToString()}")
                         cipher.encrypt(rawRecord)
                     } else {
                         rawRecord
@@ -127,16 +124,20 @@ internal class TLSClientHandshake(
                 }
             }
         } finally {
-            rawOutput.writeRecord(
-                TLSRecord(
-                    TLSRecordType.Alert,
-                    packet = buildPacket {
-                        writeByte(TLSAlertLevel.WARNING.code.toByte())
-                        writeByte(TLSAlertType.CloseNotify.code.toByte())
-                    }
-                )
+            val rawRecord = TLSRecord(
+                TLSRecordType.Alert,
+                packet = buildPacket {
+                    writeByte(TLSAlertLevel.WARNING.code.toByte())
+                    writeByte(TLSAlertType.CloseNotify.code.toByte())
+                }
             )
+            val record = if (useCipher) {
+                cipher.encrypt(rawRecord)
+            } else {
+                rawRecord
+            }
 
+            rawOutput.writeRecord(record)
             rawOutput.flushAndClose()
         }
     }

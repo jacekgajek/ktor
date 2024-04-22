@@ -100,7 +100,7 @@ actual abstract class EngineTestBase<
         try {
             allConnections.forEach { it.disconnect() }
             testLog.trace("Disposing server on port $port (SSL $sslPort)")
-            server?.stop(0, 200, TimeUnit.MILLISECONDS)
+            server?.stop(0, 5, TimeUnit.SECONDS)
         } finally {
             testJob.cancel()
             FreePorts.recycle(port)
@@ -252,18 +252,15 @@ actual abstract class EngineTestBase<
         builder: suspend HttpRequestBuilder.() -> Unit,
         block: suspend HttpResponse.(Int) -> Unit
     ) {
-//        withUrl("http://127.0.0.1:$port$path", port, builder, block)
-//        println("first done")
+        withUrl("http://127.0.0.1:$port$path", port, builder, block)
 
         if (enableSsl) {
             withUrl("https://127.0.0.1:$sslPort$path", sslPort, builder, block)
-            println("second done")
         }
 
-//        if (enableHttp2 && enableSsl) {
-//            withHttp2("https://127.0.0.1:$sslPort$path", sslPort, builder, block)
-//            println("third done")
-//        }
+        if (enableHttp2 && enableSsl) {
+            withHttp2("https://127.0.0.1:$sslPort$path", sslPort, builder, block)
+        }
     }
 
     protected inline fun socket(block: Socket.() -> Unit) {

@@ -132,7 +132,6 @@ internal suspend fun writeBody(
             chunkedJob?.join()
 
             output.closedCause?.unwrapCancellationException()?.takeIf { it !is CancellationException }?.let {
-                println("Throw $it")
                 throw it
             }
             if (closeChannel) {
@@ -194,9 +193,7 @@ internal suspend fun readResponse(
             else -> {
                 val coroutineScope = CoroutineScope(callContext + CoroutineName("Response"))
                 val httpBodyParser = coroutineScope.writer(autoFlush = true) {
-                    println("reading body")
                     parseHttpBody(version, contentLength, transferEncoding, connectionType, input, channel)
-                    println("input cancel")
                     input.cancel()
                 }
                 httpBodyParser.channel

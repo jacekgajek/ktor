@@ -45,7 +45,6 @@ public class CIOMultipartDataBase(
     }
 
     private suspend fun eventToData(event: MultipartEvent): PartData? {
-        println("Received event: $event")
         return try {
             when (event) {
                 is MultipartEvent.MultipartPart -> partToData(event)

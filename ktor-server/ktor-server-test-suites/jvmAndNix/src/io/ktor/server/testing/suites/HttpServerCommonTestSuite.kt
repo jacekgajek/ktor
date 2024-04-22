@@ -36,6 +36,28 @@ abstract class HttpServerCommonTestSuite<TEngine : ApplicationEngine, TConfigura
 ) : EngineTestBase<TEngine, TConfiguration>(hostFactory) {
 
     @Test
+    fun testUploadEcho() {
+        createAndStartServer {
+            post("/") {
+                val text = call.receiveText()
+                call.respondText(text)
+            }
+        }
+
+        val body = "y".repeat(8 * 1024)
+
+        withUrl(
+            "/",
+            {
+                method = HttpMethod.Post
+                setBody(body)
+            }
+        ) {
+            assertEquals(body, bodyAsText())
+        }
+    }
+
+    @Test
     fun testRedirect() {
         createAndStartServer {
             handle {

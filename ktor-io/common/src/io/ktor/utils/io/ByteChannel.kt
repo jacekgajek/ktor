@@ -55,9 +55,8 @@ public class ByteChannel : ByteReadChannel, ByteWriteChannel {
     override val isClosedForWrite: Boolean
         get() = _closedCause.value != null
 
-    @OptIn(InternalAPI::class)
     override val isClosedForRead: Boolean
-        get() = isClosedForWrite && flushBufferSize == 0 && readBuffer.exhausted()
+        get() = isClosedForWrite && flushBufferSize == 0 && _readBuffer.exhausted()
 
     override suspend fun awaitContent(): Boolean {
         closedCause?.let { throw it }

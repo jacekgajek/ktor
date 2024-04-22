@@ -209,7 +209,6 @@ public abstract class BaseApplicationResponse(
         responseChannel().use {
             val length = headers[HttpHeaders.ContentLength]?.toLong()
             val copied = readChannel.copyTo(this@use, length ?: Long.MAX_VALUE)
-            println("Copy to DONE")
 
             length ?: return@use
             val discarded = readChannel.discard(max = 1)

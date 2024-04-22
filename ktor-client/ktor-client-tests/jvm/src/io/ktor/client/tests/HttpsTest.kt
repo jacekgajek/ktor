@@ -48,9 +48,7 @@ abstract class HttpsTest<T : HttpClientEngineConfig>(
 
         test { client ->
             repeat(2) {
-                println("start $it")
                 val first = client.get("https://localhost:8089/")
-                println("done $it")
                 assertEquals("Hello, TLS!", first.body())
                 assertEquals("TLS test server", first.headers["X-Comment"])
             }

@@ -36,16 +36,24 @@ private class TLSSocket(
     private val socket: Socket,
     override val coroutineContext: CoroutineContext
 ) : CoroutineScope, Socket by socket {
+    private val reader = writer(coroutineContext + CoroutineName("cio-tls-input-loop")) {
+        appDataInputLoop(this.channel)
+    }.channel
 
-    override fun attachForReading(): ByteReadChannel =
-        writer(coroutineContext + CoroutineName("cio-tls-input-loop")) {
-            appDataInputLoop(this.channel)
-        }.channel
+    private val writer = reader(coroutineContext + CoroutineName("cio-tls-output-loop")) {
+        appDataOutputLoop(this.channel)
+    }.channel
 
-    override fun attachForWriting(): ByteWriteChannel =
-        reader(coroutineContext + CoroutineName("cio-tls-output-loop")) {
-            appDataOutputLoop(this.channel)
-        }.channel
+    init {
+        coroutineContext.job.invokeOnCompletion {
+            input.cancel()
+            output.close()
+        }
+    }
+
+    override fun attachForReading(): ByteReadChannel = reader
+
+    override fun attachForWriting(): ByteWriteChannel = writer
 
     private suspend fun appDataInputLoop(pipe: ByteWriteChannel) {
         try {
@@ -82,8 +90,6 @@ private class TLSSocket(
             }
         } catch (_: ClosedSendChannelException) {
             // The socket was already closed, we should ignore that error.
-        } finally {
-            output.close()
         }
     }
 

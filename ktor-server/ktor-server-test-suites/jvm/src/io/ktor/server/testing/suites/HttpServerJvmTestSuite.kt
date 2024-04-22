@@ -350,16 +350,13 @@ abstract class HttpServerJvmTestSuite<TEngine : ApplicationEngine, TConfiguratio
                                 try {
                                     val bb = ByteBuffer.allocate(8)
                                     input.readFully(bb)
-                                    println("long received")
                                     assertEquals(8, bb.position())
                                     bb.flip()
                                     output.writeFully(bb)
                                     output.flushAndClose()
-                                    println("Flushed and closed $output")
                                     input.readRemaining().use {
                                         assertEquals(0, it.remaining)
                                     }
-                                    println("Completed")
                                     completed.complete(Unit)
                                 } catch (t: Throwable) {
                                     completed.completeExceptionally(t)
@@ -430,10 +427,8 @@ abstract class HttpServerJvmTestSuite<TEngine : ApplicationEngine, TConfiguratio
                     }
                     flush()
                 }
-                println("long sent")
 
                 assertEquals(0x1122334455667788L, ch.readLong())
-                println("long received")
 
                 close()
 

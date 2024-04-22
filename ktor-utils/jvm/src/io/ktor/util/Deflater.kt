@@ -112,9 +112,7 @@ public fun ByteReadChannel.deflated(
     pool: ObjectPool<ByteBuffer> = KtorDefaultPool,
     coroutineContext: CoroutineContext = Dispatchers.Unconfined
 ): ByteReadChannel = GlobalScope.writer(coroutineContext, autoFlush = true) {
-    println("Deflating")
     this@deflated.deflateTo(channel, gzip, pool)
-    println("Deflated")
 }.channel
 
 /**
