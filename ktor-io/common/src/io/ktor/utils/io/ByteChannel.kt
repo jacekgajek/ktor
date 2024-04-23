@@ -10,6 +10,9 @@ import kotlinx.atomicfu.*
 import kotlinx.io.*
 import kotlin.concurrent.*
 
+@InternalAPI
+public val CHANNEL_MAX_SIZE: Int = 8 * 1024
+
 private class CloseToken(val cause: IOException?)
 
 private val CLOSED = CloseToken(null)
@@ -17,7 +20,7 @@ private val CLOSED = CloseToken(null)
 /**
  * Sequential (non-concurrent) byte channel implementation
  */
-public class ByteChannel : ByteReadChannel, ByteWriteChannel {
+public class ByteChannel : ByteReadChannel, BufferedByteWriteChannel {
     private val _closedCause = atomic<CloseToken?>(null)
     private val slot = AwaitingSlot()
     private val flushBuffer: Buffer = Buffer()
@@ -35,7 +38,7 @@ public class ByteChannel : ByteReadChannel, ByteWriteChannel {
     override val readBuffer: Source
         get() {
             closedCause?.let { throw it }
-            if (flushBufferSize > 0) moveFlushToReadBuffer()
+            if (_readBuffer.exhausted()) moveFlushToReadBuffer()
             return _readBuffer
         }
 
@@ -56,13 +59,17 @@ public class ByteChannel : ByteReadChannel, ByteWriteChannel {
         get() = _closedCause.value != null
 
     override val isClosedForRead: Boolean
-        get() = isClosedForWrite && flushBufferSize == 0 && _readBuffer.exhausted()
+        get() {
+            closedCause?.let { throw it }
+            return isClosedForWrite && flushBufferSize == 0 && _readBuffer.exhausted()
+        }
 
+    @OptIn(InternalAPI::class)
     override suspend fun awaitContent(): Boolean {
         closedCause?.let { throw it }
 
         if (flushBufferSize == 0 && !isClosedForRead) slot.sleepWhile { flushBufferSize == 0 && !isClosedForRead }
-        moveFlushToReadBuffer()
+        if (_readBuffer.size < CHANNEL_MAX_SIZE) moveFlushToReadBuffer()
         return _closedCause.value == null
     }
 
@@ -72,15 +79,18 @@ public class ByteChannel : ByteReadChannel, ByteWriteChannel {
             flushBuffer.transferTo(_readBuffer)
             flushBufferSize = 0
         }
+
+        slot.resume()
     }
 
     @OptIn(InternalAPI::class)
     override suspend fun flush() {
         flushWriteBuffer()
+        slot.sleepWhile { flushBufferSize >= CHANNEL_MAX_SIZE }
     }
 
     @InternalAPI
-    public fun flushWriteBuffer() {
+    public override fun flushWriteBuffer() {
         if (_writeBuffer.exhausted()) return
 
         synchronized(mutex) {
@@ -92,10 +102,17 @@ public class ByteChannel : ByteReadChannel, ByteWriteChannel {
         slot.resume()
     }
 
+    @InternalAPI
+    override fun close() {
+        if (!_closedCause.compareAndSet(null, CLOSED)) return
+        flushWriteBuffer()
+        slot.close(null)
+    }
+
     override suspend fun flushAndClose() {
         if (!_closedCause.compareAndSet(null, CLOSED)) return
         flush()
-        slot.cancel(null)
+        slot.close(null)
     }
 
     override fun cancel(cause: Throwable) {
@@ -103,7 +120,7 @@ public class ByteChannel : ByteReadChannel, ByteWriteChannel {
 
         val actualCause = IOException("Channel was cancelled", cause)
         _closedCause.compareAndSet(null, CloseToken(actualCause))
-        slot.cancel(cause)
+        slot.close(actualCause)
     }
 
     override fun toString(): String = "ByteChannel[${hashCode()}, ${slot.hashCode()}]"

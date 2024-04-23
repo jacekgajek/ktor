@@ -6,6 +6,7 @@ package io.ktor.tests.websocket
 
 import io.ktor.server.test.base.*
 import io.ktor.server.testing.*
+import io.ktor.util.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
@@ -143,6 +144,14 @@ class RawWebSocketTest : BaseTest() {
 
     @Test
     fun testServerTerminate(): Unit = runTest {
+        installProbes()
+        GlobalScope.launch {
+            delay(5000)
+            dumpCoroutines()
+
+            parent.printDebugTree()
+        }
+
         cancelAtIncomingEnd(client)
         server.cancel()
         ensureCompletion()
@@ -196,3 +205,7 @@ class RawWebSocketTest : BaseTest() {
 
     private class PlannedIOException : IOException("Connection loss.")
 }
+
+
+expect fun installProbes()
+expect fun dumpCoroutines()

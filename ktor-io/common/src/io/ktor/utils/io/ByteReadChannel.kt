@@ -23,6 +23,7 @@ public interface ByteReadChannel {
 
     /**
      * Suspend the channel until it has bytes or gets closed. Throws exception if the channel was closed with an error.
+     * If there are bytes available in the channel, this function returns immediately.
      *
      * @return return `false` eof is reached, otherwise `true`.
      */

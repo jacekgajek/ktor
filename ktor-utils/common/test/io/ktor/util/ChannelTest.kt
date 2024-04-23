@@ -100,14 +100,17 @@ class ChannelTest {
 
         val message = "Expected reason"
 
-        first.cancel(IllegalStateException(message))
-
         val sourceResult = GlobalScope.async(Dispatchers.Unconfined) {
+            source.writeFully(data)
             source.writeFully(data)
             source.flushAndClose()
         }
 
-        sourceResult.await()
+        first.cancel(IllegalStateException(message))
+
+        assertFailsWith<IOException> {
+            sourceResult.await()
+        }
 
         assertFailsWith<IOException> {
             val secondResult = GlobalScope.async(Dispatchers.Unconfined) {
@@ -131,29 +134,23 @@ class ChannelTest {
 
         val sourceResult = GlobalScope.async(Dispatchers.Unconfined) {
             source.writeFully(data)
+            source.writeFully(data)
             source.flushAndClose()
         }
 
         first.cancel(IllegalStateException(message))
 
-        val secondResult = GlobalScope.async(Dispatchers.Unconfined) {
-            second.readRemaining().readBytes()
+        assertFailsWith<IOException> {
+            val secondResult = GlobalScope.async(Dispatchers.Unconfined) {
+                second.readRemaining().readBytes()
+            }
+            secondResult.await()
         }
-        secondResult.await()
-        sourceResult.await()
-    }
-}
 
-private inline fun assertFailsWithMessage(message: String, block: () -> Unit) {
-    var fail = false
-    try {
-        block()
-    } catch (cause: Throwable) {
-        assertEquals(message, cause.message)
-        fail = true
+        assertFailsWith<IOException> {
+            sourceResult.await()
+        }
     }
-
-    assertTrue(fail)
 }
 
 private fun assertArrayEquals(expected: ByteArray, actual: ByteArray) {

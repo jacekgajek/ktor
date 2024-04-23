@@ -52,7 +52,7 @@ actual abstract class EngineTestBase<
             .any { "-agentlib:jdwp" in it }
 
     protected actual var port: Int = findFreePort()
-    protected actual var sslPort: Int = 9091 //findFreePort()
+    protected actual var sslPort: Int = findFreePort()
     protected actual var server: EmbeddedServer<TEngine, TConfiguration>? = null
     protected var callGroupSize: Int = -1
         private set

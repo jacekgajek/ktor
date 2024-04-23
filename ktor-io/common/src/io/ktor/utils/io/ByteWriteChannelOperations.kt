@@ -69,13 +69,15 @@ public suspend fun ByteWriteChannel.writeStringUtf8(value: String) {
 }
 
 @OptIn(InternalAPI::class)
-public fun ByteWriteChannel.writePacket(copy: Buffer) {
+public suspend fun ByteWriteChannel.writePacket(copy: Buffer) {
     writeBuffer.transferFrom(copy)
+    flush()
 }
 
 @OptIn(InternalAPI::class)
-public fun ByteWriteChannel.writePacket(copy: Source) {
+public suspend fun ByteWriteChannel.writePacket(copy: Source) {
     writeBuffer.transferFrom(copy)
+    flush()
 }
 
 public fun ByteWriteChannel.close(cause: Throwable?) {
@@ -136,7 +138,7 @@ public fun ByteWriteChannel.write(block: (Memory, Int, Int) -> Int): Int {
     TODO("Not yet implemented")
 }
 
-public fun ByteWriteChannel.awaitFreeSpace() {
-    TODO()
+public suspend fun ByteWriteChannel.awaitFreeSpace() {
+    flush()
 }
 

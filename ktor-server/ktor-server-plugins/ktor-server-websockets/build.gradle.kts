@@ -14,4 +14,9 @@ kotlin.sourceSets {
             api(project(":ktor-client:ktor-client-plugins:ktor-client-websockets"))
         }
     }
+    jvmTest {
+        dependencies {
+            api(libs.kotlinx.coroutines.debug)
+        }
+    }
 }

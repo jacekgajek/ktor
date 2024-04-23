@@ -7,7 +7,9 @@ package io.ktor.network.sockets
 import io.ktor.network.selector.*
 import io.ktor.util.*
 import io.ktor.utils.io.*
+import kotlinx.coroutines.*
 import kotlinx.io.*
+import java.net.*
 import java.nio.channels.*
 
 internal class SocketReadChannel(
@@ -35,6 +37,8 @@ internal class SocketReadChannel(
     @InternalAPI
     override val readBuffer: Source get() = buffer
 
+    private val timeout = socketOptions?.socketTimeout ?: INFINITE_TIMEOUT_MS
+
     override suspend fun awaitContent(): Boolean {
         if (closed != null) {
             closedCause?.let { throw IOException("Channel is cancelled", closedCause) }
@@ -48,7 +52,18 @@ internal class SocketReadChannel(
                 return false
             }
             if (count == 0) {
-                selector.select(selectable, SelectInterest.READ)
+                if (timeout == INFINITE_TIMEOUT_MS) {
+                    selector.select(selectable, SelectInterest.READ)
+                } else {
+                    val result = withTimeoutOrNull(timeout) {
+                        selector.select(selectable, SelectInterest.READ)
+                    }
+
+                    if (result == null) {
+                        cancel(SocketTimeoutException("Read timed out"))
+                        throw SocketTimeoutException("Read timed out")
+                    }
+                }
             }
         }
 

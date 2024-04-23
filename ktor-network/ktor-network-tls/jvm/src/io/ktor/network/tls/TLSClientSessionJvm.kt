@@ -34,18 +34,23 @@ private class TLSSocket(
     private val input: ReceiveChannel<TLSRecord>,
     private val output: SendChannel<TLSRecord>,
     private val socket: Socket,
-    override val coroutineContext: CoroutineContext
+    coroutineContext: CoroutineContext,
 ) : CoroutineScope, Socket by socket {
-    private val reader = writer(coroutineContext + CoroutineName("cio-tls-input-loop")) {
+
+    private val job = Job(coroutineContext[Job])
+    override val coroutineContext: CoroutineContext = coroutineContext + job
+
+    private val reader = writer(this.coroutineContext + CoroutineName("cio-tls-input-loop")) {
         appDataInputLoop(this.channel)
     }.channel
 
-    private val writer = reader(coroutineContext + CoroutineName("cio-tls-output-loop")) {
+    private val writer = reader(this.coroutineContext + CoroutineName("cio-tls-output-loop")) {
         appDataOutputLoop(this.channel)
     }.channel
 
     init {
-        coroutineContext.job.invokeOnCompletion {
+        job.complete()
+        job.invokeOnCompletion {
             input.cancel()
             output.close()
         }

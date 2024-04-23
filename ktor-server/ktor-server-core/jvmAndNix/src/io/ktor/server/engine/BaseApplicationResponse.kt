@@ -207,7 +207,7 @@ public abstract class BaseApplicationResponse(
      */
     protected open suspend fun respondFromChannel(readChannel: ByteReadChannel) {
         responseChannel().use {
-            val length = headers[HttpHeaders.ContentLength]?.toLong()
+            val length: Long? = headers[HttpHeaders.ContentLength]?.toLong()
             val copied = readChannel.copyTo(this@use, length ?: Long.MAX_VALUE)
 
             length ?: return@use

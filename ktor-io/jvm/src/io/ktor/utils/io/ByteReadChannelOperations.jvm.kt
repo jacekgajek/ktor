@@ -85,9 +85,10 @@ public suspend fun ByteReadChannel.skipDelimiter(delimiter: ByteString) {
 
 @OptIn(InternalAPI::class)
 public suspend fun ByteReadChannel.readFully(buffer: ByteBuffer) {
-    while (availableForRead < buffer.remaining() && awaitContent()) {}
-
-    while (readBuffer.remaining > 0 && buffer.hasRemaining()) {
+    while (buffer.hasRemaining()) {
+        if (availableForRead == 0) {
+            awaitContent()
+        }
         readBuffer.readAtMostTo(buffer)
     }
 }

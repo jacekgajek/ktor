@@ -7,6 +7,7 @@ package io.ktor.network.sockets
 import io.ktor.network.selector.*
 import io.ktor.utils.io.*
 import kotlinx.atomicfu.*
+import kotlinx.coroutines.*
 import kotlinx.io.*
 import java.nio.channels.*
 
@@ -38,12 +39,25 @@ internal class SocketWriteChannel(
         selectable.interestOp(SelectInterest.WRITE, true)
     }
 
+    private val writeTimeout: Long = socketOptions?.socketTimeout ?: INFINITE_TIMEOUT_MS
+
     override suspend fun flush() {
         while (!buffer.exhausted()) {
             val count = nioChannel.write(buffer)
 
             if (count == 0L) {
-                selector.select(selectable, SelectInterest.WRITE)
+                if (writeTimeout == INFINITE_TIMEOUT_MS) {
+                    selector.select(selectable, SelectInterest.WRITE)
+                } else {
+                    val result = withTimeoutOrNull(writeTimeout) {
+                        selector.select(selectable, SelectInterest.WRITE)
+                    }
+
+                    if (result == null) {
+                        cancel(SocketTimeoutException("Write timed out"))
+                        throw SocketTimeoutException("Write timed out")
+                    }
+                }
             }
         }
     }

@@ -84,4 +84,40 @@ class ByteChannelTest {
         channel.flushAndClose()
         job.join()
     }
+
+    @OptIn(InternalAPI::class)
+    @Test
+    fun testChannelMaxSize() = testSuspend(timeoutMillis = 1000) {
+        val channel = ByteChannel()
+        val job = launch(Dispatchers.Unconfined) {
+            channel.writeFully(ByteArray(CHANNEL_MAX_SIZE))
+        }
+
+        delay(100)
+        assertFalse(job.isCompleted)
+
+        channel.readByte()
+        job.join()
+    }
+
+    @OptIn(InternalAPI::class)
+    @Test
+    fun testChannelMaxSizeWithException() = testSuspend {
+        val channel = ByteChannel()
+        var writerThrows = false
+        val deferred = async(Dispatchers.Unconfined) {
+            try {
+                channel.writeFully(ByteArray(CHANNEL_MAX_SIZE))
+            } catch (cause: IOException) {
+                writerThrows = true
+            }
+        }
+
+        assertFalse(deferred.isCompleted)
+
+        channel.cancel()
+        deferred.await()
+
+        assertTrue(writerThrows)
+    }
 }
