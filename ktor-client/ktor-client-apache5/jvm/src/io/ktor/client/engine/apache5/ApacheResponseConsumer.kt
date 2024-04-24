@@ -20,9 +20,7 @@ import kotlin.coroutines.*
 
 private object CloseChannel
 
-internal class BasicResponseConsumer(private val dataConsumer: ApacheResponseConsumer) :
-    AsyncResponseConsumer<Unit> {
-
+internal class BasicResponseConsumer(private val dataConsumer: ApacheResponseConsumer) : AsyncResponseConsumer<Unit> {
     internal val responseDeferred = CompletableDeferred<HttpResponse>()
 
     override fun consumeResponse(

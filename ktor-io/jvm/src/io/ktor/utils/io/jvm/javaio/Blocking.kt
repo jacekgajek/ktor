@@ -16,7 +16,6 @@ import kotlin.math.*
 @OptIn(InternalAPI::class)
 public fun ByteReadChannel.toInputStream(parent: Job? = null): InputStream = object : InputStream() {
 
-    var count = 0
     override fun read(): Int {
         if (isClosedForRead) return -1
         if (readBuffer.exhausted()) blockingWait()
@@ -31,7 +30,8 @@ public fun ByteReadChannel.toInputStream(parent: Job? = null): InputStream = obj
 
         val count = min(availableForRead, len)
         val result = readBuffer.readAtMostTo(b, off, off + count)
-        return result
+        if (result >= 0) return result
+        return if (isClosedForRead) -1 else 0
     }
 
     private fun blockingWait() {
