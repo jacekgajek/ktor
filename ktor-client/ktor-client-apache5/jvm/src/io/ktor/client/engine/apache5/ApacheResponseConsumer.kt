@@ -151,6 +151,7 @@ internal class ApacheResponseConsumer(
     }
 
     internal fun close() = runBlocking {
+        println("Flush and close channel")
         channel.flushAndClose()
         consumerJob.complete()
     }

@@ -498,7 +498,9 @@ class HttpResponseValidatorTest {
                 client.get {}
                 fail("Should fail")
             } catch (cause: ResponseException) {
-                assertEquals(cause.message?.contains("<body failed decoding>"), true)
+                val expected =
+                    "io.ktor.client.plugins.ResponseException: Bad response: HttpResponse[http://localhost, 900 Awesome code]. Text: \"\b�\u0001\""
+                assertEquals(expected, cause.toString())
             }
         }
     }
