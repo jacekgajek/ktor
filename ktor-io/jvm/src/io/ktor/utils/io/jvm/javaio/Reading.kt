@@ -5,6 +5,7 @@ import io.ktor.utils.io.pool.*
 import kotlinx.coroutines.*
 import kotlinx.io.*
 import kotlinx.io.Buffer
+import kotlinx.io.EOFException
 import kotlinx.io.IOException
 import java.io.*
 import java.nio.*
@@ -59,7 +60,12 @@ internal class RawSourceChannel(
         closedCause?.let { throw it }
 
         withContext(coroutineContext) {
-            val result = source.readAtMostTo(buffer, Long.MAX_VALUE)
+            val result = try {
+                source.readAtMostTo(buffer, Long.MAX_VALUE)
+            } catch (cause: EOFException) {
+                -1L
+            }
+
             if (result == -1L) {
                 job.complete()
                 source.close()
