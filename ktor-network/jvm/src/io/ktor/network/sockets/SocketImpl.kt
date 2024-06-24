@@ -5,7 +5,10 @@
 package io.ktor.network.sockets
 
 import io.ktor.network.selector.*
+import io.ktor.util.logging.*
 import java.nio.channels.*
+
+private val LOG = KtorSimpleLogger("io.ktor.network.sockets.SocketImpl")
 
 internal class SocketImpl<out S : SocketChannel>(
     override val channel: S,
@@ -41,13 +44,23 @@ internal class SocketImpl<out S : SocketChannel>(
 
     @Suppress("BlockingMethodInNonBlockingContext")
     internal suspend fun connect(target: java.net.SocketAddress): Socket {
-        if (channel.connect(target)) return this
+        LOG.info("Attempt connecting to ${target.hashCode()}")
+        if (channel.connect(target)) {
+            LOG.info("Connected fastpath with ${target.hashCode()}")
+            return this
+        }
 
         wantConnect(true)
-        selector.select(this, SelectInterest.CONNECT)
+        try {
+            selector.select(this, SelectInterest.CONNECT)
+        } catch (cause: Throwable) {
+            LOG.info("Select failed: ${target.hashCode()}. ${cause.message} \n ${cause.stackTraceToString()}")
+            throw cause
+        }
 
         while (true) {
             if (channel.finishConnect()) {
+                LOG.info("Finish connected slow path with ${target.hashCode()}")
                 // TCP has a well known self-connect problem, which client can connect to the client itself
                 // without any program listen on the port.
                 if (selfConnect()) {
@@ -61,6 +74,7 @@ internal class SocketImpl<out S : SocketChannel>(
                 break
             }
 
+            LOG.info("Connect failed, selecting for connect again: ${target.hashCode()}")
             wantConnect(true)
             selector.select(this, SelectInterest.CONNECT)
         }

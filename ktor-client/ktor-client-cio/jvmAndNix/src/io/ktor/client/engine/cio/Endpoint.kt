@@ -15,12 +15,15 @@ import io.ktor.network.sockets.*
 import io.ktor.network.tls.*
 import io.ktor.util.*
 import io.ktor.util.date.*
+import io.ktor.util.logging.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlin.coroutines.*
+
+private val LOG = KtorSimpleLogger("io.ktor.client.engine.cio.Endpoint")
 
 internal class Endpoint(
     private val host: String,
@@ -204,6 +207,7 @@ internal class Endpoint(
                 val address = InetSocketAddress(host, port)
 
                 val connect: suspend CoroutineScope.() -> Socket = {
+                    LOG.info("Connecting to ${requestData.url} ${address.hashCode()}")
                     connectionFactory.connect(address) {
                         this.socketTimeout = socketTimeout
                     }
