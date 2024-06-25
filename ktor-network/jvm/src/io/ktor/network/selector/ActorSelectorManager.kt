@@ -4,6 +4,7 @@
 
 package io.ktor.network.selector
 
+import io.ktor.util.logging.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import java.io.*

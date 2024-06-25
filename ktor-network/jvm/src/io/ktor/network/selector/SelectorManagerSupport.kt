@@ -4,11 +4,14 @@
 
 package io.ktor.network.selector
 
+import io.ktor.util.logging.*
 import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.*
 import java.nio.channels.*
 import java.nio.channels.spi.*
 import kotlin.coroutines.*
+
+private val LOG = KtorSimpleLogger("io.ktor.network.selector.SelectorManagerSupport")
 
 /**
  * Base class for NIO selector managers
@@ -32,6 +35,7 @@ public abstract class SelectorManagerSupport internal constructor() : SelectorMa
     protected abstract fun publishInterest(selectable: Selectable)
 
     public final override suspend fun select(selectable: Selectable, interest: SelectInterest) {
+        val isConnect = interest == SelectInterest.CONNECT
         val interestedOps = selectable.interestedOps
         val flag = interest.flag
 
@@ -40,12 +44,25 @@ public abstract class SelectorManagerSupport internal constructor() : SelectorMa
 
         suspendCancellableCoroutine<Unit> { continuation ->
             continuation.invokeOnCancellation {
+                if (isConnect) {
+                    LOG.info("RACE for $selectable")
+                }
                 // TODO: We've got a race here (and exception erasure)!
             }
+
             selectable.suspensions.addSuspension(interest, continuation)
+            if (isConnect) {
+                LOG.info("Suspension added for $this")
+            }
 
             if (!continuation.isCancelled) {
+                if (isConnect) {
+                    LOG.info("Publishing interest for $selectable")
+                }
                 publishInterest(selectable)
+                if (isConnect) {
+                    LOG.info("Publishing interest published $selectable")
+                }
             }
         }
     }
@@ -72,16 +89,21 @@ public abstract class SelectorManagerSupport internal constructor() : SelectorMa
      * Handles particular selected key
      */
     protected fun handleSelectedKey(key: SelectionKey) {
+        LOG.info("Selected key: $key")
         try {
             val readyOps = key.readyOps()
             val interestOps = key.interestOps()
 
             val subject = key.subject
             if (subject == null) {
+                LOG.info("Key cancelled: $key")
                 key.cancel()
                 cancelled++
             } else {
-                subject.suspensions.invokeForEachPresent(readyOps) { resume(Unit) }
+                subject.suspensions.invokeForEachPresent(readyOps) {
+                    LOG.info("Resume key: $key")
+                    resume(Unit)
+                }
 
                 val newOps = interestOps and readyOps.inv()
                 if (newOps != interestOps) {
@@ -125,6 +147,8 @@ public abstract class SelectorManagerSupport internal constructor() : SelectorMa
             if (ops != 0) {
                 pending++
             }
+
+            LOG.info("Selectable $selectable interest applied with key: $key")
         } catch (cause: Throwable) {
             selectable.channel.keyFor(selector)?.cancel()
             cancelAllSuspensions(selectable, cause)

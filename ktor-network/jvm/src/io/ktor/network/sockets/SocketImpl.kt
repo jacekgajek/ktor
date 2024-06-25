@@ -44,9 +44,9 @@ internal class SocketImpl<out S : SocketChannel>(
 
     @Suppress("BlockingMethodInNonBlockingContext")
     internal suspend fun connect(target: java.net.SocketAddress): Socket {
-        LOG.info("Attempt connecting to ${target.hashCode()}")
+        LOG.info("Attempt connecting to ${target.hashCode()}. $this")
         if (channel.connect(target)) {
-            LOG.info("Connected fastpath with ${target.hashCode()}")
+            LOG.info("Connected fastpath with ${target.hashCode()}. $this")
             return this
         }
 
@@ -54,13 +54,13 @@ internal class SocketImpl<out S : SocketChannel>(
         try {
             selector.select(this, SelectInterest.CONNECT)
         } catch (cause: Throwable) {
-            LOG.info("Select failed: ${target.hashCode()}. ${cause.message} \n ${cause.stackTraceToString()}")
+            LOG.info("Select failed: ${target.hashCode()}. ${cause.message} \n ${cause.stackTraceToString()}. $this")
             throw cause
         }
 
         while (true) {
             if (channel.finishConnect()) {
-                LOG.info("Finish connected slow path with ${target.hashCode()}")
+                LOG.info("Finish connected slow path with ${target.hashCode()}. $this")
                 // TCP has a well known self-connect problem, which client can connect to the client itself
                 // without any program listen on the port.
                 if (selfConnect()) {
@@ -74,7 +74,7 @@ internal class SocketImpl<out S : SocketChannel>(
                 break
             }
 
-            LOG.info("Connect failed, selecting for connect again: ${target.hashCode()}")
+            LOG.info("Connect failed, selecting for connect again: ${target.hashCode()}. $this")
             wantConnect(true)
             selector.select(this, SelectInterest.CONNECT)
         }
