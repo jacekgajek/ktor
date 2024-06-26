@@ -208,9 +208,11 @@ internal class Endpoint(
 
                 val connect: suspend CoroutineScope.() -> Socket = {
                     LOG.info("Connecting to ${requestData.url} ${address.hashCode()}")
-                    connectionFactory.connect(address) {
+                    val result = connectionFactory.connect(address) {
                         this.socketTimeout = socketTimeout
                     }
+                    LOG.info("Connection done to ${requestData.url} ${address.hashCode()} $result")
+                    result
                 }
 
                 val socket = when (connectTimeout) {

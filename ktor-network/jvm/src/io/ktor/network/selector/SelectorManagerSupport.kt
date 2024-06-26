@@ -101,7 +101,7 @@ public abstract class SelectorManagerSupport internal constructor() : SelectorMa
                 cancelled++
             } else {
                 subject.suspensions.invokeForEachPresent(readyOps) {
-                    LOG.info("Resume key: $key")
+                    LOG.info("Resume key: $key $subject")
                     resume(Unit)
                 }
 

@@ -64,6 +64,7 @@ internal class SocketImpl<out S : SocketChannel>(
                 // TCP has a well known self-connect problem, which client can connect to the client itself
                 // without any program listen on the port.
                 if (selfConnect()) {
+                    LOG.info("Handling self-connect ${target.hashCode()}. $this")
                     if (java7NetworkApisAvailable) {
                         channel.close()
                     } else {
@@ -71,6 +72,8 @@ internal class SocketImpl<out S : SocketChannel>(
                     }
                     continue
                 }
+
+                LOG.info("Connection done connect ${target.hashCode()}. $this")
                 break
             }
 
@@ -79,6 +82,7 @@ internal class SocketImpl<out S : SocketChannel>(
             selector.select(this, SelectInterest.CONNECT)
         }
 
+        LOG.info("Set wait connect done and exit: ${target.hashCode()}. $this")
         wantConnect(false)
 
         return this

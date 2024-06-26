@@ -7,7 +7,10 @@ package io.ktor.client.engine.cio
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import io.ktor.util.collections.*
+import io.ktor.util.logging.*
 import kotlinx.coroutines.sync.*
+
+private val LOG = KtorSimpleLogger("io.ktor.client.engine.cio.ConnectionFactory")
 
 internal class ConnectionFactory(
     private val selector: SelectorManager,
@@ -27,8 +30,11 @@ internal class ConnectionFactory(
             addressSemaphore.acquire()
 
             try {
-                aSocket(selector).tcpNoDelay().tcp().connect(address, configuration)
+                val result = aSocket(selector).tcpNoDelay().tcp().connect(address, configuration)
+                LOG.info("Connected $result to $address")
+                result
             } catch (cause: Throwable) {
+                LOG.info("Failed connecting $address")
                 // a failure or cancellation
                 addressSemaphore.release()
                 throw cause
