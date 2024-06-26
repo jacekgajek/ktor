@@ -149,7 +149,7 @@ public abstract class SelectorManagerSupport internal constructor() : SelectorMa
                 pending++
             }
 
-            LOG.info("Selectable $selectable interest applied with key: key=${key?.hashCode()}, key=${key.hashCode()}")
+            LOG.info("Selectable $selectable interest applied with key: key=${key?.hashCode()}, key=${newKey.hashCode()}")
         } catch (cause: Throwable) {
             selectable.channel.keyFor(selector)?.cancel()
             cancelAllSuspensions(selectable, cause)
