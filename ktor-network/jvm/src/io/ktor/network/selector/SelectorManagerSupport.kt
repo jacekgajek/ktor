@@ -133,10 +133,11 @@ public abstract class SelectorManagerSupport internal constructor() : SelectorMa
             val channel = selectable.channel
             val key = channel.keyFor(selector)
             val ops = selectable.interestedOps
+            var newKey: SelectionKey? = null
 
             if (key == null) {
                 if (ops != 0) {
-                    channel.register(selector, ops, selectable)
+                    newKey = channel.register(selector, ops, selectable)
                 }
             } else {
                 if (key.interestOps() != ops) {
@@ -148,7 +149,7 @@ public abstract class SelectorManagerSupport internal constructor() : SelectorMa
                 pending++
             }
 
-            LOG.info("Selectable $selectable interest applied with key: $key")
+            LOG.info("Selectable $selectable interest applied with key: $key, $newKey")
         } catch (cause: Throwable) {
             selectable.channel.keyFor(selector)?.cancel()
             cancelAllSuspensions(selectable, cause)
