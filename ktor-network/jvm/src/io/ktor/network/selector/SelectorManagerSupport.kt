@@ -89,19 +89,19 @@ public abstract class SelectorManagerSupport internal constructor() : SelectorMa
      * Handles particular selected key
      */
     protected fun handleSelectedKey(key: SelectionKey) {
-        LOG.info("Selected key: $key")
+        LOG.info("Selected key: key=${key.hashCode()}")
         try {
             val readyOps = key.readyOps()
             val interestOps = key.interestOps()
 
             val subject = key.subject
             if (subject == null) {
-                LOG.info("Key cancelled: $key")
+                LOG.info("Key cancelled: key=${key.hashCode()}")
                 key.cancel()
                 cancelled++
             } else {
                 subject.suspensions.invokeForEachPresent(readyOps) {
-                    LOG.info("Resume key: $key $subject")
+                    LOG.info("Resume key: key=${key.hashCode()} $subject")
                     resume(Unit)
                 }
 
@@ -149,7 +149,7 @@ public abstract class SelectorManagerSupport internal constructor() : SelectorMa
                 pending++
             }
 
-            LOG.info("Selectable $selectable interest applied with key: $key, $newKey")
+            LOG.info("Selectable $selectable interest applied with key: key=${key?.hashCode()}, key=${key.hashCode()}")
         } catch (cause: Throwable) {
             selectable.channel.keyFor(selector)?.cancel()
             cancelAllSuspensions(selectable, cause)
