@@ -71,6 +71,7 @@ public abstract class SelectorManagerSupport internal constructor() : SelectorMa
      * Handle selected keys clearing [selectedKeys] set
      */
     protected fun handleSelectedKeys(selectedKeys: MutableSet<SelectionKey>, keys: Set<SelectionKey>) {
+        LOG.info("Handle selected keys: ${selectedKeys.joinToString { it.hashCode().toString() }}, $this")
         val selectedCount = selectedKeys.size
         pending = keys.size - selectedCount
         cancelled = 0
@@ -115,6 +116,7 @@ public abstract class SelectorManagerSupport internal constructor() : SelectorMa
                 }
             }
         } catch (cause: Throwable) {
+            LOG.info("Key cancelled: $cause,  key=${key.hashCode()}")
             // cancelled or rejected on resume?
             key.cancel()
             cancelled++

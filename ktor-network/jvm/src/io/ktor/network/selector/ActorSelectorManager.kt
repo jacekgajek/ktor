@@ -13,6 +13,8 @@ import java.util.concurrent.atomic.*
 import kotlin.coroutines.*
 import kotlin.coroutines.intrinsics.*
 
+private val LOG = KtorSimpleLogger("io.ktor.network.selector.ActorSelectorManager")
+
 /**
  * Default CIO selector manager implementation
  */
@@ -64,13 +66,18 @@ public class ActorSelectorManager(context: CoroutineContext) : SelectorManagerSu
 
     private suspend fun process(mb: LockFreeMPSCQueue<Selectable>, selector: Selector) {
         while (!closed) {
+            LOG.info("Process interest $this")
             processInterests(mb, selector)
 
             if (pending > 0) {
+                LOG.info("Process interest done, processing pending: $pending, $this")
+                LOG.info("Selecting: ${selector.keys().joinToString { it.hashCode().toString() }}")
                 if (select(selector) > 0) {
+                    LOG.info("Handle selected keys: $pending, $this")
                     handleSelectedKeys(selector.selectedKeys(), selector.keys())
                 } else {
                     val received = mb.removeFirstOrNull()
+                    LOG.info("Nothing selected, apply interest: $received, $this, ${mb.isEmpty}")
                     if (received != null) applyInterest(selector, received) else yield()
                 }
 
