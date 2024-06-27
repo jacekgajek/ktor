@@ -46,9 +46,11 @@ public class ActorSelectorManager(context: CoroutineContext) : SelectorManagerSu
                     process(selectionQueue, currentSelector)
                 } catch (cause: Throwable) {
                     closed = true
+                    LOG.info("Selection queue closed from process: $this, ${cause.stackTraceToString()}")
                     selectionQueue.close()
                     cancelAllSuspensions(currentSelector, cause)
                 } finally {
+                    LOG.info("Selection queue closed from process: $this")
                     closed = true
                     selectionQueue.close()
                     selectorRef = null
@@ -184,6 +186,9 @@ public class ActorSelectorManager(context: CoroutineContext) : SelectorManagerSu
      * Close selector manager and release all resources
      */
     override fun close() {
+        val stack = Exception().stackTraceToString()
+        LOG.info("Close selector manager from close: $this\n$stack")
+
         closed = true
         selectionQueue.close()
         if (!continuation.resume(Unit)) {
