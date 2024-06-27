@@ -75,7 +75,7 @@ public class ActorSelectorManager(context: CoroutineContext) : SelectorManagerSu
                 LOG.info("Process interest done, processing pending: $pending, $this")
                 LOG.info("Selecting: ${
                     selector.keys().joinToString {
-                        "(${it.hashCode()} ${it.isConnectable} ${((it.interestOps() and SelectionKey.OP_CONNECT) != 0)})"
+                        "(${it.hashCode()} ${if (it.isValid) "Connectable=${it.isConnectable}" else "Cancelled"} ${((it.interestOps() and SelectionKey.OP_CONNECT) != 0)})"
                     }
                 }")
                 if (select(selector) > 0) {
