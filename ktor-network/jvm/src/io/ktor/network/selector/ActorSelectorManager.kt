@@ -77,7 +77,9 @@ public class ActorSelectorManager(context: CoroutineContext) : SelectorManagerSu
                     selector.keys().joinToString {
                         "(${it.hashCode()} ${
                             if (it.isValid) {
-                                "Connectable=${it.isConnectable} Waiting for connect=${((it.interestOps() and SelectionKey.OP_CONNECT) != 0)}"
+                                runCatching {
+                                    "Connectable=${it.isConnectable} Waiting for connect=${((it.interestOps() and SelectionKey.OP_CONNECT) != 0)}"
+                                }.getOrNull() ?: "failed, ${it.isValid}"
                             } else {
                                 "Cancelled"
                             }
