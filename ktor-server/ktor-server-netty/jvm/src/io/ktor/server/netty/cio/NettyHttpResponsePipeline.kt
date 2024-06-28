@@ -8,6 +8,7 @@ import io.ktor.http.*
 import io.ktor.server.netty.*
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
+import io.netty.buffer.*
 import io.netty.channel.*
 import io.netty.handler.codec.http.*
 import io.netty.handler.codec.http2.*
@@ -98,6 +99,7 @@ internal class NettyHttpResponsePipeline(
         val t = when {
             actualException is IOException && actualException !is ChannelIOException ->
                 ChannelWriteException(exception = actualException)
+
             else -> actualException
         }
 
@@ -321,36 +323,38 @@ internal class NettyHttpResponsePipeline(
         var lastFuture: ChannelFuture = requestMessageFuture
 
         @Suppress("DEPRECATION")
-        channel.lookAheadSuspend {
-            while (true) {
-                val buffer = request(0, 1)
-                if (buffer == null) {
-                    if (!awaitAtLeast(1)) break
-                    continue
-                }
+        var buf: ByteBuf? = null
+        while (!channel.isClosedForRead) {
+            if (channel.availableForRead == 0) {
+                if (!channel.awaitContent()) break
+                continue
+            }
 
+            channel.read { buffer ->
                 val rc = buffer.remaining()
-                val buf = context.alloc().buffer(rc)
-                val idx = buf.writerIndex()
-                buf.setBytes(idx, buffer)
-                buf.writerIndex(idx + rc)
+                val newBuffer = context.alloc().buffer(rc)
+                val idx = newBuffer.writerIndex()
+                newBuffer.setBytes(idx, buffer)
+                newBuffer.writerIndex(idx + rc)
+                buf = newBuffer
 
-                consumed(rc)
+                buffer.position(buffer.limit())
                 unflushedBytes += rc
+            }
 
-                val message = call.prepareMessage(buf, false)
+            val buffer = buf ?: break
 
-                if (shouldFlush.invoke(channel, unflushedBytes)) {
-                    context.read()
-                    val future = context.writeAndFlush(message)
-                    isDataNotFlushed.compareAndSet(expect = true, update = false)
-                    lastFuture = future
-                    future.suspendAwait()
-                    unflushedBytes = 0
-                } else {
-                    lastFuture = context.write(message)
-                    isDataNotFlushed.compareAndSet(expect = false, update = true)
-                }
+            val message = call.prepareMessage(buffer, false)
+            if (shouldFlush.invoke(channel, unflushedBytes)) {
+                context.read()
+                val future = context.writeAndFlush(message)
+                isDataNotFlushed.compareAndSet(expect = true, update = false)
+                lastFuture = future
+                future.suspendAwait()
+                unflushedBytes = 0
+            } else {
+                lastFuture = context.write(message)
+                isDataNotFlushed.compareAndSet(expect = false, update = true)
             }
         }
 
