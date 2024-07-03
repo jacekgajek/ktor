@@ -7,10 +7,11 @@ package io.ktor.client.engine.cio
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import io.ktor.util.collections.*
+import kotlinx.atomicfu.AtomicInt
+import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.sync.*
-import java.util.concurrent.atomic.AtomicInteger
 
-public val CIO_CONNECTIONS_IN_FACTORY: AtomicInteger = AtomicInteger(0)
+public val CIO_CONNECTIONS_IN_FACTORY: AtomicInt = atomic(0)
 
 internal class ConnectionFactory(
     private val selector: SelectorManager,
