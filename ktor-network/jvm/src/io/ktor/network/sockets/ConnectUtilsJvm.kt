@@ -17,9 +17,15 @@ internal actual suspend fun connect(
     if (remoteAddress is InetSocketAddress) assignOptions(socketOptions)
     nonBlocking()
 
-    SocketImpl(this, selector, socketOptions).apply {
-        connect(remoteAddress.toJavaAddress())
+    val socket = SocketImpl(this, selector, socketOptions)
+    try {
+        socket.connect(remoteAddress.toJavaAddress())
+    } catch (cause: Throwable) {
+        socket.close()
+        throw cause
     }
+
+    return socket
 }
 
 internal actual fun bind(
