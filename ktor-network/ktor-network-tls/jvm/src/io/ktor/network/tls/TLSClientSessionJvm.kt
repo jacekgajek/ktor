@@ -12,7 +12,10 @@ import io.ktor.utils.io.pool.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import java.nio.*
+import java.util.concurrent.atomic.*
 import kotlin.coroutines.*
+
+public val CIO_TLS_SOCKET_COUNT: AtomicInteger = AtomicInteger(0)
 
 internal actual suspend fun openTLSSession(
     socket: Socket,
@@ -37,6 +40,10 @@ private class TLSSocket(
     private val socket: Socket,
     override val coroutineContext: CoroutineContext
 ) : CoroutineScope, Socket by socket {
+
+    init {
+        CIO_TLS_SOCKET_COUNT.incrementAndGet()
+    }
 
     override fun attachForReading(channel: ByteChannel): WriterJob =
         writer(coroutineContext + CoroutineName("cio-tls-input-loop"), channel) {
@@ -87,6 +94,7 @@ private class TLSSocket(
     }
 
     override fun dispose() {
+        CIO_TLS_SOCKET_COUNT.decrementAndGet()
         socket.dispose()
     }
 }

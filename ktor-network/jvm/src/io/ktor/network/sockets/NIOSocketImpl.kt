@@ -14,6 +14,8 @@ import java.nio.channels.*
 import java.util.concurrent.atomic.*
 import kotlin.coroutines.*
 
+public val CIO_SOCKETS_COUNT: AtomicInteger = AtomicInteger(0)
+
 internal abstract class NIOSocketImpl<out S>(
     override val channel: S,
     val selector: SelectorManager,
@@ -21,6 +23,10 @@ internal abstract class NIOSocketImpl<out S>(
     private val socketOptions: SocketOptions.TCPClientSocketOptions? = null
 ) : ReadWriteSocket, SelectableBase(channel), CoroutineScope
     where S : java.nio.channels.ByteChannel, S : SelectableChannel {
+
+    init {
+        CIO_SOCKETS_COUNT.incrementAndGet()
+    }
 
     private val closeFlag = AtomicBoolean()
 
@@ -65,6 +71,7 @@ internal abstract class NIOSocketImpl<out S>(
 
     override fun close() {
         if (!closeFlag.compareAndSet(false, true)) return
+        CIO_SOCKETS_COUNT.decrementAndGet()
 
         readerJob.get()?.channel?.close()
         writerJob.get()?.cancel()

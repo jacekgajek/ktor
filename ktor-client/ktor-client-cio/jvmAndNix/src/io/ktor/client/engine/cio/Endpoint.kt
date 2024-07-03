@@ -209,7 +209,7 @@ internal class Endpoint(
                     }
                 }
 
-                val socket = when (connectTimeout) {
+                val socket: Socket = when (connectTimeout) {
                     HttpTimeout.INFINITE_TIMEOUT_MS -> connect()
                     else -> {
                         val connection = withTimeoutOrNull(connectTimeout, connect)

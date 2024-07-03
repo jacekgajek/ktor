@@ -207,6 +207,10 @@ public final class io/ktor/network/sockets/JavaSocketAddressUtilsKt {
 	public static final fun toJavaAddress (Lio/ktor/network/sockets/SocketAddress;)Ljava/net/SocketAddress;
 }
 
+public final class io/ktor/network/sockets/NIOSocketImplKt {
+	public static final fun getCIO_SOCKETS_COUNT ()Ljava/util/concurrent/atomic/AtomicInteger;
+}
+
 public abstract interface class io/ktor/network/sockets/ReadWriteSocket : io/ktor/network/sockets/AReadable, io/ktor/network/sockets/ASocket, io/ktor/network/sockets/AWritable {
 }
 

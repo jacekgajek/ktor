@@ -6,6 +6,7 @@ package io.ktor.network.sockets
 
 import io.ktor.network.selector.*
 import java.nio.channels.*
+import java.util.concurrent.atomic.AtomicInteger
 
 internal class SocketImpl<out S : SocketChannel>(
     override val channel: S,

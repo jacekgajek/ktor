@@ -180,6 +180,10 @@ public final class io/ktor/network/tls/TLSAlertType$Companion {
 	public final fun byCode (I)Lio/ktor/network/tls/TLSAlertType;
 }
 
+public final class io/ktor/network/tls/TLSClientSessionJvmKt {
+	public static final fun getCIO_TLS_SOCKET_COUNT ()Ljava/util/concurrent/atomic/AtomicInteger;
+}
+
 public final class io/ktor/network/tls/TLSCommonKt {
 	public static final fun tls (Lio/ktor/network/sockets/Connection;Lkotlin/coroutines/CoroutineContext;Lio/ktor/network/tls/TLSConfig;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun tls (Lio/ktor/network/sockets/Connection;Lkotlin/coroutines/CoroutineContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
