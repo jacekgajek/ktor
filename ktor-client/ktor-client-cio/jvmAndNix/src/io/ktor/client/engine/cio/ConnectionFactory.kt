@@ -11,7 +11,8 @@ import kotlinx.atomicfu.AtomicInt
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.sync.*
 
-public val CIO_CONNECTIONS_IN_FACTORY: AtomicInt = atomic(0)
+private val _CIO_CONNECTIONS_IN_FACTORY: AtomicInt = atomic(0)
+public val CIO_CONNECTIONS_IN_FACTORY: Int get() = _CIO_CONNECTIONS_IN_FACTORY.value
 
 internal class ConnectionFactory(
     private val selector: SelectorManager,
@@ -26,7 +27,7 @@ internal class ConnectionFactory(
         configuration: SocketOptions.TCPClientSocketOptions.() -> Unit = {}
     ): Socket {
         limit.acquire()
-        CIO_CONNECTIONS_IN_FACTORY.incrementAndGet()
+        _CIO_CONNECTIONS_IN_FACTORY.incrementAndGet()
         return try {
             val addressSemaphore = addressLimit.computeIfAbsent(address) { Semaphore(addressConnectionsLimit) }
             addressSemaphore.acquire()
@@ -39,14 +40,14 @@ internal class ConnectionFactory(
                 throw cause
             }
         } catch (cause: Throwable) {
-            CIO_CONNECTIONS_IN_FACTORY.decrementAndGet()
+            _CIO_CONNECTIONS_IN_FACTORY.decrementAndGet()
             limit.release()
             throw cause
         }
     }
 
     fun release(address: InetSocketAddress) {
-        CIO_CONNECTIONS_IN_FACTORY.decrementAndGet()
+        _CIO_CONNECTIONS_IN_FACTORY.decrementAndGet()
         addressLimit[address]!!.release()
         limit.release()
     }

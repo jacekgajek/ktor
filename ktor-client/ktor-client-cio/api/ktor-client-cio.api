@@ -32,7 +32,7 @@ public final class io/ktor/client/engine/cio/ClientClosedException : java/lang/I
 }
 
 public final class io/ktor/client/engine/cio/ConnectionFactoryKt {
-	public static final fun getCIO_CONNECTIONS_IN_FACTORY ()Ljava/util/concurrent/atomic/AtomicInteger;
+	public static final fun getCIO_CONNECTIONS_IN_FACTORY ()I
 }
 
 public final class io/ktor/client/engine/cio/EndpointConfig {
